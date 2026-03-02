@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قيد التطوير | قريباً</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+min-height: 100vh;
+display: flex;
+justify-content: center;
+align-items: center;
+text-align: center;
+padding: 20px;
+}
+
+.container {
+max-width: 800px;
+width: 100%;
+background: rgba(255, 255, 255, 0.95);
+border-radius: 20px;
+padding: 50px 30px;
+box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+backdrop-filter: blur(10px);
+animation: fadeIn 1s ease-in-out;
+position: relative;
+}
+
+/* زر العودة البسيط */
+.back-button {
+position: absolute;
+top: 20px;
+right: 20px;
+display: inline-flex;
+align-items: center;
+gap: 5px;
+padding: 6px 12px;
+background-color: rgba(102, 126, 234, 0.1);
+color: #667eea;
+text-decoration: none;
+border-radius: 20px;
+font-size: 13px;
+font-weight: 500;
+border: 1px solid rgba(102, 126, 234, 0.2);
+transition: background-color 0.2s ease;
+}
+
+.back-button:hover {
+background-color: rgba(102, 126, 234, 0.2);
+}
+
+.back-arrow {
+font-size: 14px;
+}
+
+@keyframes fadeIn {
+from {
+opacity: 0;
+transform: translateY(-20px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.construction-icon {
+font-size: 80px;
+margin-bottom: 20px;
+animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+0%, 100% {
+transform: translateY(0);
+}
+50% {
+transform: translateY(-20px);
+}
+}
+
+h1 {
+font-size: 48px;
+color: #333;
+margin-bottom: 15px;
+font-weight: 700;
+}
+
+.highlight {
+color: #667eea;
+position: relative;
+display: inline-block;
+}
+
+.highlight::after {
+content: '';
+position: absolute;
+bottom: -5px;
+left: 0;
+width: 100%;
+height: 3px;
+background: linear-gradient(90deg, #667eea, #764ba2);
+border-radius: 3px;
+}
+
+p {
+font-size: 20px;
+color: #666;
+line-height: 1.8;
+margin-bottom: 30px;
+}
+
+.progress-container {
+margin: 40px 0;
+text-align: left;
+}
+
+.progress-label {
+display: flex;
+justify-content: space-between;
+margin-bottom: 10px;
+color: #555;
+font-weight: 500;
+}
+
+.progress-bar {
+width: 100%;
+height: 20px;
+background: #f0f0f0;
+border-radius: 10px;
+overflow: hidden;
+box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.progress-fill {
+height: 100%;
+background: linear-gradient(90deg, #667eea, #764ba2);
+border-radius: 10px;
+width: 0%;
+animation: progress 2s ease-out forwards;
+}
+
+@keyframes progress {
+from {
+width: 0%;
+}
+to {
+width: 75%;
+}
+}
+
+.features {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 20px;
+margin: 40px 0;
+}
+
+.feature-item {
+padding: 20px;
+background: #f8f9fa;
+border-radius: 10px;
+transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+transform: translateY(-5px);
+box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+font-size: 30px;
+margin-bottom: 10px;
+display: block;
+}
+
+.feature-item h3 {
+color: #333;
+margin-bottom: 5px;
+font-size: 18px;
+}
+
+.feature-item p {
+font-size: 14px;
+color: #777;
+margin: 0;
+}
+
+.countdown {
+background: linear-gradient(135deg, #667eea15, #764ba215);
+padding: 30px;
+border-radius: 15px;
+margin: 30px 0;
+}
+
+.countdown h3 {
+color: #333;
+margin-bottom: 20px;
+font-size: 24px;
+}
+
+.countdown-timer {
+display: flex;
+justify-content: center;
+gap: 20px;
+flex-wrap: wrap;
+}
+
+.timer-block {
+background: white;
+padding: 15px;
+border-radius: 10px;
+min-width: 80px;
+box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.timer-number {
+font-size: 36px;
+font-weight: 700;
+color: #667eea;
+display: block;
+}
+
+.timer-label {
+font-size: 14px;
+color: #666;
+text-transform: uppercase;
+}
+
+.newsletter {
+margin: 40px 0;
+text-align: center;
+}
+
+.newsletter h3 {
+color: #333;
+margin-bottom: 15px;
+font-size: 22px;
+}
+
+.input-group {
+display: flex;
+max-width: 500px;
+margin: 0 auto;
+gap: 10px;
+}
+
+.input-group input {
+flex: 1;
+padding: 15px 20px;
+border: 2px solid #e0e0e0;
+border-radius: 10px;
+font-size: 16px;
+transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+outline: none;
+border-color: #667eea;
+}
+
+.btn {
+padding: 15px 30px;
+background: linear-gradient(135deg, #667eea, #764ba2);
+color: white;
+border: none;
+border-radius: 10px;
+font-size: 16px;
+font-weight: 600;
+cursor: pointer;
+transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.contact-info {
+margin-top: 30px;
+padding-top: 20px;
+border-top: 2px solid #f0f0f0;
+}
+
+.contact-info p {
+font-size: 16px;
+color: #888;
+margin: 5px 0;
+}
+
+.contact-info a {
+color: #667eea;
+text-decoration: none;
+font-weight: 600;
+}
+
+.contact-info a:hover {
+text-decoration: underline;
+}
+
+.social-links {
+margin-top: 20px;
+}
+
+.social-links a {
+display: inline-block;
+margin: 0 10px;
+color: #667eea;
+font-size: 24px;
+transition: color 0.3s;
+}
+
+.social-links a:hover {
+color: #764ba2;
+}
+
+@media (max-width: 768px) {
+h1 {
+font-size: 36px;
+}
+
+p {
+font-size: 18px;
+}
+
+.input-group {
+flex-direction: column;
+}
+
+.timer-block {
+min-width: 60px;
+}
+
+.timer-number {
+font-size: 28px;
+}
+
+.back-button {
+top: 10px;
+right: 10px;
+font-size: 12px;
+padding: 4px 10px;
+}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<!-- زر العودة البسيط - غير ملفت -->
+<a href="home.html" class="back-button" id="backBtn">
+<span class="back-arrow">←</span>
+العودة
+</a>
+
+<div class="construction-icon">🚧</div>
+<h1>الموقع <span class="highlight">قيد التطوير</span></h1>
+<p>نعمل حالياً على بناء شيء مميز لك! استعد لتجربة فريدة ومحتوى حصري قريباً جداً.</p>
+
+<div class="progress-container">
+<div class="progress-label">
+<span>نسبة الإنجاز</span>
+<span>75%</span>
+</div>
+<div class="progress-bar">
+<div class="progress-fill"></div>
+</div>
+</div>
+
+<div class="features">
+<div class="feature-item">
+<span class="feature-icon">🎨</span>
+<h3>تصميم عصري</h3>
+<p>تجربة مستخدم سلسة وتصميم متجاوب</p>
+</div>
+<div class="feature-item">
+<span class="feature-icon">⚡</span>
+<h3>أداء عالي</h3>
+<p>سرعة فائقة في التصفح والتحميل</p>
+</div>
+<div class="feature-item">
+<span class="feature-icon">🔒</span>
+<h3>آمن تماماً</h3>
+<p>حماية متقدمة لبياناتك وخصوصيتك</p>
+</div>
+<div class="feature-item">
+<span class="feature-icon">📱</span>
+<h3>متجاوب</h3>
+<p>يعمل على جميع الأجهزة والشاشات</p>
+</div>
+</div>
+
+<div class="countdown">
+<h3>🔜 الإطلاق خلال</h3>
+<div class="countdown-timer">
+<div class="timer-block">
+<span class="timer-number" id="days">1</span>
+<span class="timer-label">يوم</span>
+</div>
+<div class="timer-block">
+<span class="timer-number" id="hours">08</span>
+<span class="timer-label">ساعة</span>
+</div>
+<div class="timer-block">
+<span class="timer-number" id="minutes">30</span>
+<span class="timer-label">دقيقة</span>
+</div>
+<div class="timer-block">
+<span class="timer-number" id="seconds">45</span>
+<span class="timer-label">ثانية</span>
+</div>
+</div>
+</div>
+
+<div class="newsletter">
+<h3>📧 اشترك ليصلك كل جديد</h3>
+<div class="input-group">
+<input type="email" placeholder="أدخل بريدك الإلكتروني" dir="ltr">
+<button class="btn">اشتراك</button>
+</div>
+</div>
+
+<div class="contact-info">
+<p>📞 للاستفسارات: <a href="tel:+123456789">+123 456 789</a></p>
+<p>📧 البريد الإلكتروني: <a href="mailto:info@example.com">info@example.com</a></p>
+<div class="social-links">
+<a href="#" title="فيسبوك">📘</a>
+<a href="#" title="تويتر">🐦</a>
+<a href="#" title="انستغرام">📷</a>
+<a href="#" title="لينكد إن">🔗</a>
+</div>
+</div>
+</div>
+
+<script>
+// ===== كود تذكر الـ style فقط =====
+// عند تحميل الصفحة، نمرر الثيم المحفوظ عبر الرابط
+(function() {
+// الحصول على الثيم المحفوظ
+const savedTheme = localStorage.getItem('selectedTheme');
+
+// تعديل رابط العودة ليشمل الثيم
+const backBtn = document.getElementById('backBtn');
+if (backBtn) {
+const href = backBtn.getAttribute('href');
+if (savedTheme) {
+backBtn.setAttribute('href', href + '?theme=' + savedTheme);
+}
+}
+})();
+
+// تحديث العد التنازلي
+function updateCountdown() {
+// تاريخ الإطلاق (بعد 15 يوم من الآن)
+const launchDate = new Date();
+launchDate.setDate(launchDate.getDate() + 15);
+
+function updateTimer() {
+const now = new Date().getTime();
+const distance = launchDate - now;
+
+const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+document.getElementById('days').textContent = String(days).padStart(2, '0');
+document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+}
+
+updateTimer();
+setInterval(updateTimer, 1000);
+}
+
+updateCountdown();
+
+// رسالة تأكيد عند الاشتراك
+document.querySelector('.btn').addEventListener('click', function() {
+const email = document.querySelector('input[type="email"]').value;
+if (email) {
+alert('شكراً لاشتراكك! سنخبرك فور إطلاق الموقع.');
+} else {
+alert('الرجاء إدخال البريد الإلكتروني');
+}
+});
+</script>
+</body>
+</html>
