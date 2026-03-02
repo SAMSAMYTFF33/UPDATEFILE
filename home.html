@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>S2 Neon Menu</title>
+<title>S2 Neon Menu | Red Style</title>
 <style>
 body{
 margin:0;
@@ -16,18 +16,36 @@ justify-content:flex-start;
 background: radial-gradient(circle at top,#1a001f,#000000 70%);
 font-family:Arial, Helvetica, sans-serif;
 color:white;
-padding-top:20px; /* تصغير المسافة العلوية */
+padding-top:20px;
 }
 
-/* زر التحديث الصغير في الأعلى */
+/* تحديث وأيقونة القائمة */
 .update-container {
 width: 90%;
 max-width: 500px;
 display: flex;
-justify-content: flex-end;
+justify-content: space-between;
+position: relative;
 margin-bottom: 10px;
 }
 
+/* أيقونة ☰ */
+#menu-icon {
+background: transparent;
+border: none;
+font-size: 22px;
+color: white;
+cursor: pointer;
+transition: 0.3s;
+padding: 0 5px;
+}
+#menu-icon:hover {
+color: #ff00ff;
+transform: scale(1.1);
+text-shadow: 0 0 10px #ff00ff;
+}
+
+/* زر التحديث */
 .update-btn {
 background: transparent;
 border: 1px solid #ff00ff;
@@ -49,8 +67,32 @@ transform: scale(1.05);
 background: rgba(255, 0, 255, 0.1);
 }
 
+/* أزرار اللونين مخفية افتراضياً */
+#color-buttons {
+display: none;
+position: absolute;
+top: 40px;
+left: 0;
+gap: 10px;
+}
+
+/* أزرار اللونين */
+#color-buttons button {
+padding: 6px 12px;
+border: none;
+border-radius: 12px;
+color: white;
+cursor: pointer;
+font-weight: bold;
+transition: 0.3s;
+}
+#green-btn { background-color: #00cc44; }
+#red-btn { background-color: #cc0000; }
+#color-buttons button:hover { opacity: 0.8; }
+
+/* شعار */
 .logo{
-margin-bottom:30px; /* تصغير المسافة */
+margin-bottom:30px;
 font-size:55px;
 font-weight:bold;
 color:#ff3c3c;
@@ -124,11 +166,17 @@ padding:10px 20px;
 </style>
 </head>
 <body>
-<!-- ✅ زر التحديث الصغير مضاف هنا -->
+
+<!-- زر القائمة وزر التحديث -->
 <div class="update-container">
-<button onclick="checkForUpdate()" class="update-btn">
-update
-</button>
+<button id="menu-icon">☰</button>
+<button onclick="checkForUpdate()" class="update-btn">update</button>
+
+<!-- أزرار اللونين مخفية افتراضياً -->
+<div id="color-buttons">
+<button id="green-btn">أخضر</button>
+<button id="red-btn">أحمر</button>
+</div>
 </div>
 
 <div class="logo">S2</div>
@@ -136,7 +184,7 @@ update
 <div class="container">
 <div class="row">
 <a href="xt.html" class="neon-btn">مدخل للعلاقات الدولية </a>
-<a href="MODIL2.html" class="neon-btn">القانون التجاري الأساسي</a>
+<a href="xt.html" class="neon-btn">القانون التجاري الأساسي</a>
 </div>
 
 <div class="row">
@@ -152,6 +200,26 @@ update
 </div>
 
 <script>
+// زر ☰ لإظهار أو إخفاء أزرار اللونين
+const menuIcon = document.getElementById('menu-icon');
+const colorButtons = document.getElementById('color-buttons');
+const greenBtn = document.getElementById('green-btn');
+const redBtn = document.getElementById('red-btn');
+
+menuIcon.addEventListener('click', () => {
+// التبديل بين إظهار وإخفاء الأزرار
+if (colorButtons.style.display === 'none' || colorButtons.style.display === '') {
+colorButtons.style.display = 'flex';
+} else {
+colorButtons.style.display = 'none';
+}
+});
+
+// فتح الملفات المحلية عند الضغط على الأزرار
+greenBtn.addEventListener('click', () => { window.location.href = 'green.html'; });
+redBtn.addEventListener('click', () => { window.location.href = 'home.html'; });
+
+// زر التحديث
 function checkForUpdate() {
 if (AndroidBridge) {
 AndroidBridge.checkForUpdate();
@@ -160,5 +228,6 @@ alert('زر التحديث يعمل فقط داخل التطبيق');
 }
 }
 </script>
+
 </body>
 </html>
