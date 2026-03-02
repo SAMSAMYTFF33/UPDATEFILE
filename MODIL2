@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آلة حاسبة متعددة اللغات</title>
+
+    <!-- CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg,#141e30,#243b55);
+            font-family: Arial, sans-serif;
+        }
+        .calculator {
+            background: #f1f1f1;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+            width: 300px;
+        }
+        input[type="text"] {
+            width: 100%;
+            height: 50px;
+            margin-bottom: 10px;
+            text-align: right;
+            padding: 10px;
+            font-size: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .buttons button {
+            width: 22%;
+            margin: 2%;
+            height: 50px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-operator {
+            background: #ff9500;
+            color: white;
+        }
+        .btn-number {
+            background: #d4d4d2;
+        }
+        .btn-equal {
+            background: #1e90ff;
+            color: white;
+            width: 96%;
+        }
+        select {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <select id="languageSelector">
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="it">Italiano</option>
+    </select>
+
+    <input type="text" id="display" disabled>
+
+    <div class="buttons">
+        <button class="btn-number" onclick="appendValue('7')">7</button>
+        <button class="btn-number" onclick="appendValue('8')">8</button>
+        <button class="btn-number" onclick="appendValue('9')">9</button>
+        <button class="btn-operator" onclick="appendValue('/')">/</button>
+
+        <button class="btn-number" onclick="appendValue('4')">4</button>
+        <button class="btn-number" onclick="appendValue('5')">5</button>
+        <button class="btn-number" onclick="appendValue('6')">6</button>
+        <button class="btn-operator" onclick="appendValue('*')">*</button>
+
+        <button class="btn-number" onclick="appendValue('1')">1</button>
+        <button class="btn-number" onclick="appendValue('2')">2</button>
+        <button class="btn-number" onclick="appendValue('3')">3</button>
+        <button class="btn-operator" onclick="appendValue('-')">-</button>
+
+        <button class="btn-number" onclick="appendValue('0')">0</button>
+        <button class="btn-number" onclick="appendValue('.')">.</button>
+        <button class="btn-operator" onclick="clearDisplay()">C</button>
+        <button class="btn-operator" onclick="appendValue('+')">+</button>
+
+        <button class="btn-equal" onclick="calculate()">=</button>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const display = document.getElementById('display');
+
+    function appendValue(val) {
+        display.value += val;
+    }
+
+    function clearDisplay() {
+        display.value = '';
+    }
+
+    function calculate() {
+        try {
+            display.value = eval(display.value);
+        } catch (e) {
+            display.value = 'خطأ!';
+        }
+    }
+
+    const translations = {
+        ar: {C: 'مسح', '=': '='},
+        en: {C: 'C', '=': '='},
+        fr: {C: 'Effacer', '=': '='},
+        es: {C: 'Borrar', '=': '='},
+        de: {C: 'Löschen', '=': '='},
+        it: {C: 'Cancella', '=': '='}
+    };
+
+    $('#languageSelector').on('change', function() {
+        const lang = $(this).val();
+        $('.btn-operator').each(function() {
+            const text = $(this).text();
+            if(text === 'C' || text === 'مسح') {
+                $(this).text(translations[lang]['C']);
+            }
+        });
+        $('.btn-equal').text(translations[lang]['=']);
+    });
+</script>
+
+</body>
+</html>
