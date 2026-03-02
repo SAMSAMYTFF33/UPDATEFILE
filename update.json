@@ -1,6 +1,14 @@
 {
-  "latest_version_code": 3,
-  "latest_version_name": "1.0.3",
-  "html_file": "xt.html",
-  "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/xt-html/main/text.html"
+  "files": [
+    {
+      "file_name": "xt.html",
+      "latest_version_code": 2,
+      "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/xt-html/main/text.html"
+    },
+    {
+      "file_name": "page.html",
+      "latest_version_code": 1,
+      "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/UPDATEFILE/main/page.html"
+    }
+  ]
 }
