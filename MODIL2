@@ -1,90 +1,122 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multi Language Page</title>
+<title>Multi Lang Modern</title>
 
 <style>
-body{
+*{
     margin:0;
+    padding:0;
+    box-sizing:border-box;
     font-family:Arial, sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#003300,#000000);
+    color:white;
     text-align:center;
-    background:#111;
-    color:white;
 }
 
-/* زر الرجوع */
-.back-btn{
+/* زر الرجوع الدائري */
+.back{
     position:fixed;
-    top:10px;
-    left:10px;
-    background:#00cc66;
-    color:white;
+    top:15px;
+    left:15px;
+    width:35px;
+    height:35px;
+    border-radius:50%;
     border:none;
-    padding:5px 10px;
-    font-size:12px;
-    border-radius:5px;
+    background:#00ff88;
+    color:black;
+    font-weight:bold;
     cursor:pointer;
+    box-shadow:0 0 10px #00ff88;
 }
 
-/* ازرار اللغات */
-.lang-btn{
+/* صندوق المحتوى */
+.card{
+    background:rgba(255,255,255,0.05);
+    padding:30px;
+    border-radius:15px;
+    backdrop-filter:blur(10px);
+    box-shadow:0 0 20px rgba(0,255,100,0.4);
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+/* ازرار اللغة */
+.langs button{
     margin:5px;
-    padding:8px 15px;
+    padding:8px 18px;
     border:none;
-    border-radius:5px;
+    border-radius:20px;
     cursor:pointer;
     background:#00cc66;
     color:white;
+    transition:0.3s;
 }
 
-/* النص */
-.content{
-    margin-top:80px;
-    font-size:20px;
+.langs button:hover{
+    background:#00ff88;
 }
 </style>
 </head>
 
 <body>
 
-<!-- زر الرجوع -->
-<button class="back-btn" onclick="goBack()">↩</button>
+<button class="back" onclick="window.location='green.html'">←</button>
 
-<!-- ازرار تغيير اللغة -->
-<div style="margin-top:40px;">
-    <button class="lang-btn" onclick="setLang('ar')">العربية</button>
-    <button class="lang-btn" onclick="setLang('en')">English</button>
-    <button class="lang-btn" onclick="setLang('fr')">Français</button>
-</div>
+<div class="card">
+    <h1 id="title">مرحبا بك</h1>
+    <p id="desc">اختر لغتك المفضلة</p>
 
-<!-- المحتوى -->
-<div class="content" id="text">
-    مرحبا بك في موقعي
+    <div class="langs">
+        <button onclick="changeLang('ar')">العربية</button>
+        <button onclick="changeLang('en')">English</button>
+        <button onclick="changeLang('fr')">Français</button>
+    </div>
 </div>
 
 <script>
-function setLang(lang){
-    let text = document.getElementById("text");
 
-    if(lang === "ar"){
-        document.documentElement.lang = "ar";
-        text.innerHTML = "مرحبا بك في موقعي";
+const content = {
+    ar:{
+        title:"مرحبا بك",
+        desc:"اختر لغتك المفضلة"
+    },
+    en:{
+        title:"Welcome",
+        desc:"Choose your preferred language"
+    },
+    fr:{
+        title:"Bienvenue",
+        desc:"Choisissez votre langue préférée"
     }
-    if(lang === "en"){
-        document.documentElement.lang = "en";
-        text.innerHTML = "Welcome to my website";
-    }
-    if(lang === "fr"){
-        document.documentElement.lang = "fr";
-        text.innerHTML = "Bienvenue sur mon site";
-    }
+};
+
+function changeLang(lang){
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
+    document.getElementById("title").innerText = content[lang].title;
+    document.getElementById("desc").innerText = content[lang].desc;
+
+    localStorage.setItem("lang", lang);
 }
 
-function goBack(){
-    window.location.href = "green.html";
-}
+window.onload = function(){
+    let savedLang = localStorage.getItem("lang") || "ar";
+    changeLang(savedLang);
+};
+
 </script>
 
 </body>
