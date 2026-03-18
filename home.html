@@ -1,160 +1,211 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Green Page | S2 Neon Menu</title>
-<style>
-body{
-margin:0;
-padding:0;
-height:100vh;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:flex-start;
-background: radial-gradient(circle at top,#001a00,#000000 70%);
-font-family:Arial, Helvetica, sans-serif;
-color:white;
-padding-top:20px;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S2 | Ultimate Precision Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #00ff88;
+            --secondary: #00bdff;
+            --bg-dark: #050a0a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
 
-/* حاوية زر التحديث */
-.update-container {
-width: 90%;
-max-width: 500px;
-display: flex;
-justify-content: flex-end; /* جعل الزر جهة اليمين */
-position: relative;
-margin-bottom: 10px;
-}
+        body {
+            margin: 0; padding: 0; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            background: var(--bg-dark);
+            font-family: 'Tajawal', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 255, 136, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 189, 255, 0.15) 0px, transparent 50%);
+            -webkit-user-select: none;
+            user-select: none;
+        }
 
-.update-btn {
-background: transparent;
-border: 1px solid #00ff00;
-color: white;
-font-size: 14px;
-padding: 5px 12px;
-border-radius: 20px;
-cursor: pointer;
-box-shadow: 0 0 5px #00ff00;
-transition: 0.3s;
-}
+        .header-nav {
+            width: 90%; max-width: 500px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 0;
+        }
 
-.update-btn:hover {
-box-shadow: 0 0 15px #00ff00;
-transform: scale(1.05);
-background: rgba(0,255,0,0.1);
-}
+        .update-btn {
+            background: var(--card-bg); border: 1px solid var(--glass-border);
+            color: var(--primary); padding: 8px 20px; border-radius: 12px;
+            cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px); font-size: 14px; font-weight: bold;
+        }
+        .update-btn:hover {
+            transform: scale(1.05); background: var(--primary); color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
 
-/* شعار */
-.logo{
-margin-bottom:30px;
-font-size:55px;
-font-weight:bold;
-color:#00ff00;
-padding:15px 80px;
-border-radius:60px;
-border:3px solid transparent;
-background: linear-gradient(#000,#000) padding-box,
-linear-gradient(90deg,#00ff00,#00ff88) border-box;
-box-shadow:0 0 25px #00ff00,
-0 0 50px #00ff88;
-text-align:center;
-}
+        .logo-box {
+            position: relative; margin: 20px 0 40px;
+            animation: float 4s ease-in-out infinite;
+        }
+        .logo {
+            font-size: 50px; font-weight: 900; letter-spacing: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.3));
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
 
-.container{
-width:90%;
-max-width:500px;
-}
+        /* --- التعديل هنا فقط: الحاوية أصبحت بعرض الشاشة الكامل --- */
+        .container {
+            width: 100%; /* عرض كامل */
+            max-width: none; /* إلغاء الحد الأقصى */
+            display: flex; 
+            flex-direction: column;
+            gap: 1px; /* فجوة بسيطة جداً كخط فاصل */
+            padding-bottom: 50px;
+        }
 
-.row{
-display:flex;
-justify-content:space-between;
-margin-bottom:25px;
-}
+        /* --- التعديل هنا فقط: المستطيلات أصبحت ممتدة بدون حواف دائرية جانبية --- */
+        .neon-btn {
+            position: relative;
+            display: flex; align-items: center; gap: 15px;
+            padding: 20px 25px; /* زيادة الطول قليلاً */
+            text-decoration: none; font-size: 16px; font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: var(--card-bg);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            border-left: none; /* إزالة الحدود الجانبية */
+            border-right: none;
+            border-radius: 0; /* إزالة الانحناء ليمتد من الحافة للحافة */
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-sizing: border-box;
+            
+            -webkit-touch-callout: none;
+            -webkit-user-drag: none;
+        }
 
-.neon-btn{
-flex:1;
-margin:0 10px;
-text-align:center;
-padding:15px;
-text-decoration:none;
-font-size:20px;
-font-weight:bold;
-color:white;
-border-radius:40px;
-position:relative;
-transition:0.3s;
-background:#111;
-border:2px solid transparent;
-background-image: linear-gradient(#111,#111),
-linear-gradient(90deg,#00ff00,#00ff88);
-background-origin:border-box;
-background-clip:padding-box,border-box;
-box-shadow:0 0 10px #00ff00,
-0 0 20px #00ff88;
-}
+        .neon-btn i { font-size: 20px; color: var(--primary); transition: 0.3s; }
 
-.neon-btn:hover{
-transform:scale(1.08);
-box-shadow:0 0 25px #00ff00,
-0 0 50px #00ff88;
-}
+        .neon-btn:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
 
-.single-row{
-display:flex;
-justify-content:space-between;
-margin-bottom:25px;
-}
+        /* تحسين مظهر السحب للمستطيلات الكاملة */
+        .sortable-ghost {
+            opacity: 0.3;
+            background: rgba(255, 80, 80, 0.2) !important;
+        }
 
-@media(max-width:500px){
-.row, .single-row{
-flex-direction:column;
-}
-.neon-btn{
-margin:10px 0;
-}
-.logo{
-font-size:12vw;
-padding:10px 20px;
-}
-}
-</style>
+        .sortable-drag {
+            opacity: 1 !important;
+            background: #002200 !important; 
+            color: #fff !important;
+            border-y: 2px solid var(--primary) !important;
+            transform: scale(1.02) !important; /* تكبير بسيط جداً ليظهر السحب */
+        }
+        
+        .sortable-drag i { color: #fff !important; }
+
+        .sortable-fallback {
+            transition: transform 0.2s ease;
+        }
+    </style>
 </head>
-<body>
 
-<div class="update-container">
-<button class="update-btn" onclick="checkForUpdate()">update</button>
+<body oncontextmenu="return false;">
+
+<div class="header-nav">
+    <div style="font-size: 12px; color: var(--primary); opacity: 0.7;">V 2.0.1</div>
+    <button class="update-btn" onclick="checkForUpdate()">
+        <i class="fas fa-sync-alt"></i> update
+    </button>
 </div>
 
-<div class="logo">S2</div>
-
-<div class="container">
-<div class="row">
-<a href="M1.html" class="neon-btn">مدخل للعلاقات الدولية </a>
-<a href="M2.html" class="neon-btn">القانون التجاري الأساسي</a>
+<div class="logo-box">
+    <div class="logo">S2</div>
 </div>
 
-<div class="row">
-<a href="M3.html" class="neon-btn">القانون الجنائي العام</a>
-<a href="M4.html" class="neon-btn">النضرية العامة الإلتزامات</a>
+<div class="container" id="main-list">
+    <a href="M1.html" class="neon-btn" data-id="m1">
+        <i class="fas fa-globe-americas"></i> مدخل للعلاقات الدولية
+    </a>
+    <a href="M2.html" class="neon-btn" data-id="m2">
+        <i class="fas fa-gavel"></i> القانون التجاري الأساسي
+    </a>
+    <a href="M3.html" class="neon-btn" data-id="m3">
+        <i class="fas fa-balance-scale"></i> القانون الجنائي العام
+    </a>
+    <a href="M4.html" class="neon-btn" data-id="m4">
+        <i class="fas fa-file-contract"></i> النظرية العامة للإلتزامات
+    </a>
+    <a href="M5.html" class="neon-btn" data-id="m5">
+        <i class="fas fa-university"></i> القانون الإداري والتنظيم الإداري
+    </a>
+    <a href="M6.html" class="neon-btn" data-id="m6">
+        <i class="fas fa-laptop-code"></i> قانون معاملات الكترونية
+    </a>
+    <a href="M7.html" class="neon-btn" data-id="m7">
+        <i class="fas fa-robot"></i> المهارات الرقمية والذكاء الاصطناعي
+    </a>
 </div>
 
-<div class="single-row">
-<a href="M5.html" class="neon-btn">مدخل للقانون الإداري وتنضيم الإداري</a>
-<a href="M6.html" class="neon-btn">قانون معاملات الكترونية </a>
-<a href="M7.html" class="neon-btn">المهارات الرقمية ودكاء الإصطناعي</a>
-</div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script>
-// وظيفة زر التحديث
+const el = document.getElementById('main-list');
+let isDragging = false; 
+
+new Sortable(el, {
+    animation: 300,
+    delay: 400,              
+    delayOnTouchOnly: true,  
+    touchStartThreshold: 10, 
+    forceFallback: true,
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',
+
+    onStart: function() {
+        isDragging = true; 
+        if (navigator.vibrate) navigator.vibrate(40);
+    },
+    onEnd: function() {
+        setTimeout(() => { isDragging = false; }, 50); 
+        const order = Array.from(el.children).map(child => child.getAttribute('data-id'));
+        localStorage.setItem('s2-menu-order-final', JSON.stringify(order));
+    }
+});
+
+window.onload = function() {
+    const savedOrder = JSON.parse(localStorage.getItem('s2-menu-order-final'));
+    if (savedOrder) {
+        savedOrder.forEach(id => {
+            const item = el.querySelector(`[data-id="${id}"]`);
+            if (item) el.appendChild(item);
+        });
+    }
+};
+
+el.addEventListener('click', function(e) {
+    if (isDragging) {
+        e.preventDefault();
+    }
+});
+
 function checkForUpdate() {
     if (typeof AndroidBridge !== 'undefined') {
         AndroidBridge.checkForUpdate();
     } else {
-        alert('زر التحديث يعمل فقط داخل التطبيق');
+        alert("زر التحديث يعمل فقط داخل التطبيق 🚀");
     }
 }
 </script>
