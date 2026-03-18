@@ -2,12 +2,17 @@
   "files": [
     {
       "file_name": "home.html",
-      "latest_version_code": 2,
+      "latest_version_code": 1,
       "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/UPDATEFILE/main/home.html"
+    },
+{
+      "file_name": "555.json",
+      "latest_version_code": 1,
+      "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/FILES-MODIL-/main/555.json"
     },
     {
       "file_name": "M1.html",
-      "latest_version_code": 4,
+      "latest_version_code": 1,
       "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/FILES-MODIL-/main/M1.html"
     },
     {
@@ -17,7 +22,7 @@
     },
     {
       "file_name": "M2.html",
-      "latest_version_code": 2,
+      "latest_version_code": 1,
       "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/FILES-MODIL-/main/M2.html"
     },
     {
@@ -27,12 +32,12 @@
     },
     {
       "file_name": "M3.html",
-      "latest_version_code": 2,
+      "latest_version_code": 1,
       "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/FILES-MODIL-/main/M3.html"
     },
     {
       "file_name": "M3F1.html",
-      "latest_version_code": 5,
+      "latest_version_code": 1,
       "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/FILES-MODIL-/main/M3F1.html"
     },
     {
@@ -67,12 +72,12 @@
     },
     {
       "file_name": "M7.html",
-      "latest_version_code": 2,
+      "latest_version_code": 1,
       "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/FILES-MODIL-/main/M7.html"
     },
     {
       "file_name": "M7F1.html",
-      "latest_version_code": 2,
+      "latest_version_code": 1,
       "html_url": "https://raw.githubusercontent.com/SAMSAMYTFF33/FILES-MODIL-/main/M7F1.html"
     }
   ]
