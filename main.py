@@ -20,18 +20,15 @@ HEADERS = {
 }
 
 # ==========================================
-# إعدادات معرفات (IDs) تليجرام الجديدة ⚙️
+# إعدادات معرفات (IDs) تليجرام
 # ==========================================
 TELEGRAM_TOKEN = "8288533297:AAGMDEG1feHpX6887h1kVhmSGsL0Y6SpF04"
 
-# الـ ID المخصص لإشعارات المهام الفورية (كل 5 دقائق)
-ID_TASKS = "7638322813"
-
-# الـ ID المخصص لتقارير عدم وجود مهام وبقاء السيرفر أونلاين (كل 15 دقيقة)
-ID_REPORT = "8486184645"
+ID_TASKS = "7638322813"   # الحساب الخاص بالمهام (عند وجود مهمة)
+ID_REPORT = "8486184645"  # الحساب الخاص بالتقرير (عند عدم وجود مهمة)
 
 # ==========================================
-# دالة إرسال الإشعارات العامة
+# دالة إرسال الإشعارات
 # ==========================================
 def send_telegram_message(chat_id, message):
     telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -39,145 +36,117 @@ def send_telegram_message(chat_id, message):
         "chat_id": chat_id,
         "text": message,
         "parse_mode": "Markdown",
-        "disable_web_page_preview": False
+        "disable_web_page_preview": True
     }
     try:
-        response = requests.post(telegram_url, json=payload, timeout=10)
-        if response.status_code == 200:
-            print(f"✅ تم إرسال الرسالة بنجاح إلى الـ ID: {chat_id}")
-        else:
-            print(f"⚠️ فشل إرسال الرسالة للـ ID ({chat_id}): {response.text}")
+        requests.post(telegram_url, json=payload, timeout=10)
     except Exception as e:
-        print(f"⚠️ خطأ أثناء الاتصال بتليجرام للـ ID ({chat_id}): {e}")
+        print(f"⚠️ خطأ أثناء الاتصال بتليجرام: {e}")
 
 # ==========================================
-# الدالة الأساسية لفحص وجلب البيانات من الموقع
+# الحلقة الموحدة للفحص (تمنع التكرار والتداخل)
 # ==========================================
-def fetch_orders():
-    session = requests.Session()
-    try:
-        session.get(BASE_URL, headers=HEADERS, timeout=15)
-        login_data = {
-            "signin[username]": USERNAME,
-            "signin[password]": PASSWORD,
-            "signin[remember]": "1",
-            "signin[refer_url]": "@office_initial"
-        }
-        login_response = session.post(LOGIN_URL, data=login_data, headers=HEADERS, timeout=15)
+def smart_check_loop():
+    # عداد داخلي لحساب وقت التقرير (كل 15 دقيقة)
+    # الفحص يتم كل 5 دقائق، إذن كل 3 دورات فحص تعادل 15 دقيقة
+    loop_counter = 0
+
+    while True:
+        loop_counter += 1
+        session = requests.Session()
+        print(f"🔄 [بدء الفحص الدورة رقم {loop_counter}]...")
         
-        if login_response.status_code != 200:
-            return "ERROR_AUTH", "خطأ في الاتصال بالموقع أثناء تسجيل الدخول."
-
-        r = session.get(TARGET_URL, headers=HEADERS, timeout=15)
-        if "Выход" not in r.text:
-            return "ERROR_AUTH", "فشل تسجيل الدخول. تأكد من صحة حساب الموقع."
-
-        soup = BeautifulSoup(r.text, "html.parser")
-        table = soup.find("table") 
-        if not table:
-            return "NO_TABLE", "تم تسجيل الدخول، ولكن لم يتم العثور على جدول المهام حالياً."
+        try:
+            session.get(BASE_URL, headers=HEADERS, timeout=15)
+            login_data = {
+                "signin[username]": USERNAME,
+                "signin[password]": PASSWORD,
+                "signin[remember]": "1",
+                "signin[refer_url]": "@office_initial"
+            }
+            login_response = session.post(LOGIN_URL, data=login_data, headers=HEADERS, timeout=15)
             
-        rows = table.find_all("tr")
-        jobs_found = []
-        
-        for row in rows[1:]:
-            cells = row.find_all("td")
-            if len(cells) >= 8:
-                title_cell = cells[1]
-                title = title_cell.get_text(strip=True)
-                price = cells[2].get_text(strip=True)
+            if login_response.status_code == 200:
+                r = session.get(TARGET_URL, headers=HEADERS, timeout=15)
                 
-                actions_cell = cells[-1] 
-                actions_text = actions_cell.get_text(strip=True)
-                has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
-                
-                if has_link:
-                    job_link = BASE_URL
-                    link_tag = title_cell.find("a")
-                    if link_tag and link_tag.has_attr("href"):
-                        job_link = BASE_URL + link_tag["href"]
-                    jobs_found.append({"title": title, "price": price, "link": job_link})
+                if "Выход" in r.text:
+                    soup = BeautifulSoup(r.text, "html.parser")
+                    table = soup.find("table") 
                     
-        return "SUCCESS", jobs_found
+                    jobs_found = []
+                    if table:
+                        rows = table.find_all("tr")
+                        for row in rows[1:]:
+                            cells = row.find_all("td")
+                            if len(cells) >= 8:
+                                title_cell = cells[1]
+                                price_cell = cells[2]
+                                
+                                # استخراج السعر وتدقيقه
+                                price = price_cell.get_text(strip=True)
+                                if not price or price == "" or "---" in price:
+                                    price = "*"
+                                else:
+                                    # إبقاء الأرقام فقط أو الكلمة المكتوبة
+                                    price = price.replace("руб.", "").strip()
+                                
+                                actions_cell = cells[-1] 
+                                actions_text = actions_cell.get_text(strip=True)
+                                has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
+                                
+                                if has_link:
+                                    jobs_found.append(price)
 
-    except Exception as e:
-        return "ERROR_CONN", f"حدث خطأ أثناء الاتصال: {str(e)}"
+                    # 🌟 [حالة وجود مهام] -> يرسل إلى ID_TASKS
+                    if len(jobs_found) > 0:
+                        for current_price in jobs_found:
+                            short_message = f"توجد مهمة واحد بسعر {current_price} روبل"
+                            send_telegram_message(ID_TASKS, short_message)
+                            print(f"🔥 تم إرسال إشعار بمهمة سعرها {current_price} للـ ID الخاص بالمهام.")
+                    
+                    # 🌟 [حالة عدم وجود مهام] -> يرسل إلى ID_REPORT كل 15 دقيقة (الدورة 1، 3، 6...) لمنع النوم
+                    else:
+                        print("🔍 لا توجد مهام حالياً في هذه الدورة.")
+                        if loop_counter >= 3: # تعادل 15 دقيقة تماماً
+                            send_telegram_message(ID_REPORT, "لا توجد أي مهمة")
+                            print("💤 تم إرسال تقرير (لا توجد أي مهمة) لحماية السيرفر من النوم.")
+                            loop_counter = 0 # تصفير العداد لإعادة الحساب
 
-# ==========================================
-# ⏱ الحلقة الأولى: فحص المهام وإرسالها فوراً (كل 5 دقائق)
-# ==========================================
-def fast_check_loop():
-    while True:
-        print("🔍 [حلقة الـ 5 دقائق]: جاري فحص المهام المتاحة...")
-        status, result = fetch_orders()
-        
-        if status == "SUCCESS" and len(result) > 0:
-            print(f"🔥 تم العثور على {len(result)} مهام! جاري إرسالها للـ ID: {ID_TASKS}")
-            for job in result:
-                job_message = (
-                    f"🔔 *مهمة جديدة متاحة للعمل فوراً!*\n\n"
-                    f"📌 *العنوان:* {job['title']}\n"
-                    f"💰 *السعر:* {job['price']} روبل\n\n"
-                    f"🔗 [اضغط هنا لفتح المهمة مباشرة]({job['link']})"
-                )
-                send_telegram_message(ID_TASKS, job_message)
-        else:
-            print("🔍 [حلقة الـ 5 دقائق]: لا توجد مهام حالياً (لن يتم إرسال إزعاج).")
+                else:
+                    print("❌ فشل تسجيل الدخول للموقع.")
+            else:
+                print("❌ فشل الاتصال بالموقع.")
+
+        except Exception as e:
+            print(f"⚠️ حدث خطأ أثناء الفحص الحالي: {e}")
             
-        time.sleep(300) # فحص كل 5 دقائق تماماً
+        print("💤 في انتظار الفحص القادم بعد 5 دقائق...")
+        time.sleep(300) # فحص منظم وثابت كل 5 دقائق تماماً بدلاً من 3
 
 # ==========================================
-# ⏱ الحلقة الثانية: تقرير عدم الوجود لمنع توقف السيرفر (كل 15 دقيقة)
-# ==========================================
-def keep_alive_report_loop():
-    while True:
-        print("💤 [حلقة الـ 15 دقيقة]: جاري إرسال تقرير الحالة وحماية السيرفر من النوم...")
-        status, result = fetch_orders()
-        
-        if status == "SUCCESS" and len(result) == 0:
-            report_msg = "🔍 *تقرير الفحص الدوري (كل 15 دقيقة):*\nلا توجد أي مهام متاحة حالياً في الجدول، السيرفر يعمل بشكل ممتاز وبانتظار الصيد! ⚙️"
-            send_telegram_message(ID_REPORT, report_msg)
-        elif status != "SUCCESS":
-            # إرسال تقرير في حال وجود مشكلة في الموقع أو الحساب
-            send_telegram_message(ID_REPORT, f"⚠️ *تنبيه من السيرفر:*\n{result}")
-        else:
-            print("💤 [حلقة الـ 15 دقيقة]: توجد مهام بالفعل، حلقة الـ 5 دقائق تولت إرسالها.")
-            
-        time.sleep(900) # إرسال تقرير كل 15 دقيقة تماماً (تمنع الـ Spin down في Render)
-
-# ==========================================
-# سيرفر ويب وهمي لاستقبال اتصالات الويب من Render
+# سيرفر ويب لاستقبال طلبات Render
 # ==========================================
 class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write("السكربت يعمل بنظام الحلقات الذكية (5 دقائق للمهام / 15 دقيقة للتقارير)!".encode("utf-8"))
+        self.wfile.write("السكربت يعمل بنظام الفحص الموحد الذكي!".encode("utf-8"))
 
 def run_web_server():
     server_address = ('', 10000)
     httpd = HTTPServer(server_address, WebServerHandler)
-    print("🌐 تم تشغيل سيرفر الويب الأساسي بنجاح...")
     httpd.serve_forever()
 
 # ==========================================
-# نقطة انطلاق البرنامج الأساسية
+# نقطة الانطلاق
 # ==========================================
 if __name__ == "__main__":
-    print("🚀 تم بدء تشغيل السكريبت المطور بالكامل...")
+    print("🚀 تم تشغيل السكريبت المحدث بنجاح...")
     
-    # رسالة ترحيبية أولية للحسابين للتأكد من جاهزيتهما
-    send_telegram_message(ID_TASKS, "🚀 تم تفعيل قناة استقبال صيد المهام الفورية بنجاح (الفحص كل 5 دقائق)!")
-    send_telegram_message(ID_REPORT, "⚙️ تم تفعيل قناة التقارير الدورية وحماية السيرفر بنجاح (التقرير كل 15 دقيقة)!")
+    # تشغيل حلقة الفحص الذكية في الخلفية
+    t = threading.Thread(target=smart_check_loop, daemon=True)
+    t.start()
     
-    # تشغيل حلقة الفحص السريع (5 دقائق) في الخلفية
-    t1 = threading.Thread(target=fast_check_loop, daemon=True)
-    t1.start()
-    
-    # تشغيل حلقة التقارير والحماية (15 دقيقة) في الخلفية
-    t2 = threading.Thread(target=keep_alive_report_loop, daemon=True)
-    t2.start()
-    
-    # تشغيل السيرفر الرئيسي لـ Render
+    # تشغيل سيرفر الويب لـ Render
     run_web_server()
