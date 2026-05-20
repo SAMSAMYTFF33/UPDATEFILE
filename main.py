@@ -2,6 +2,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import threading
+import re
 import telebot
 from telebot import types
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -26,7 +27,7 @@ user_sessions = {}
 user_data_store = {}
 
 # ==========================================
-# دالة الاتصال بالموقع وفحص البيانات
+# دالة الاتصال بالموقع وفحص البيانات بدقة
 # ==========================================
 def fetch_site_data(username, password):
     session = requests.Session()
@@ -47,37 +48,45 @@ def fetch_site_data(username, password):
         if "Выход" not in r.text:
             return None, "❌ فشل تسجيل الدخول. تأكد من صحة الإيميل وكلمة المرور."
 
+        # تنظيف النص واستخراجه بدقة كما في الكود الثاني الناجح
         soup = BeautifulSoup(r.text, "html.parser")
+        for tag in soup(["script", "style"]):
+            tag.decompose()
         
-        # 💰 استخراج الرصيد الحالي (روبل) من أعلى الصفحة
-        balance = "*"
-        balance_tag = soup.find("span", {"class": "balance"}) or soup.find(text=lambda t: "руб" in t)
-        if balance_tag:
-            balance = balance_tag.get_text(strip=True).replace("руб.", "").replace("руб", "").strip()
+        page_text = soup.get_text(separator="\n")
+        
+        # 💰 1. استخراج الرصيد المتاح (Доступно) بدقة بواسطة التعبيرات النمطية
+        balance = "0.0"
+        available_match = re.search(r"Доступно:\s*([\d.,\s]+)\s*р\.", page_text)
+        if available_match:
+            balance = available_match.group(1).strip()
+        else:
+            # محاولة أخرى في حال اختلف التنسيق قليلاً
+            available_match_alt = re.search(r"Доступно:\s*([^\n]+)", page_text)
+            if available_match_alt:
+                balance = available_match_alt.group(1).replace("р.", "").strip()
 
-        # 📋 حساب عدد المهام وفحص أسعارها
+        # 📋 2. حساب عدد المهام وفحص أسعارها من الجدول
         tasks_prices = []
         table = soup.find("table")
         if table:
             rows = table.find_all("tr")
             for row in rows[1:]:
                 cells = row.find_all("td")
-                if len(cells) >= 8:
-                    title_cell = cells[1]
+                if len(cells) >= 3: # التأكد من وجود خلايا كافية لقراءة السعر
                     price_cell = cells[2]
-                    
-                    # تنظيف السعر وفحصه
                     price = price_cell.get_text(strip=True)
-                    if not price or price == "" or "---" in price:
-                        price = "*"
-                    else:
-                        price = price.replace("руб.", "").replace("руб", "").strip()
                     
-                    actions_cell = cells[-1]
-                    actions_text = actions_cell.get_text(strip=True)
-                    has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
-                    if has_link:
-                        tasks_prices.append(price)
+                    if price and "---" not in price:
+                        price = price.replace("руб.", "").replace("руб", "").strip()
+                        
+                        # التحقق من وجود رابط تفاعلي أو زر للمهمة في نهاية السطر
+                        actions_cell = cells[-1]
+                        actions_text = actions_cell.get_text(strip=True)
+                        has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
+                        
+                        if has_link:
+                            tasks_prices.append(price)
 
         return {"balance": balance, "tasks": tasks_prices}, "SUCCESS"
 
@@ -144,16 +153,16 @@ def handle_messages(message):
         if status == "SUCCESS":
             total_tasks = len(data['tasks'])
             
+            # إرسال تحديث الرصيد الحالي أولاً
+            bot.send_message(chat_id, f"💰 رصيد الروبل الحالي المتاح لديك: `{data['balance']}` روبل", parse_mode="Markdown")
+            
             # في حال عدم وجود أي مهمة
             if total_tasks == 0:
-                bot.send_message(chat_id, "لا توجد أي مهمة", reply_markup=get_logged_in_menu())
+                bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة حالياً.", reply_markup=get_logged_in_menu())
             else:
-                # في حال وجود مهام، يرسل السعر بشكل مبسط لكل مهمة
+                bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة:")
                 for price in data['tasks']:
-                    bot.send_message(chat_id, f"توجد مهمة واحد بسعر {price} روبل", reply_markup=get_logged_in_menu())
-                
-                # إرسال تحديث الرصيد الحالي منفصلاً في النهاية للاطلاع
-                bot.send_message(chat_id, f"💰 رصيد الروبل الحالي لديك: `{data['balance']}` روبل", parse_mode="Markdown")
+                    bot.send_message(chat_id, f"🔹 توجد مهمة متاحة بسعر: {price} روبل", reply_markup=get_logged_in_menu())
         else:
             bot.send_message(chat_id, status, reply_markup=get_logged_in_menu())
 
@@ -176,19 +185,19 @@ def handle_messages(message):
             data, status = fetch_site_data(email, password)
             
             if status == "SUCCESS":
-                # حفظ البيانات بأمان داخل ذاكرة السيرفر
                 user_data_store[chat_id] = {'email': email, 'password': password}
                 del user_sessions[chat_id]
                 
                 total_tasks = len(data['tasks'])
-                bot.send_message(chat_id, f"✅ تم تسجيل الدخول بنجاح!\n💰 رصيد الروبل لديك: `{data['balance']}` روبل", parse_mode="Markdown")
+                bot.send_message(chat_id, f"✅ تم تسجيل الدخول بنجاح!\n💰 رصيد الروبل المتاح لديك: `{data['balance']}` روبل", parse_mode="Markdown")
                 
                 # فحص المهام الأولي عند الدخول مباشرة
                 if total_tasks == 0:
-                    bot.send_message(chat_id, "لا توجد أي مهمة", reply_markup=get_logged_in_menu())
+                    bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة حالياً.", reply_markup=get_logged_in_menu())
                 else:
+                    bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة:")
                     for price in data['tasks']:
-                        bot.send_message(chat_id, f"توجد مهمة واحد بسعر {price} روبل", reply_markup=get_logged_in_menu())
+                        bot.send_message(chat_id, f"🔹 توجد مهمة متاحة بسعر: {price} روبل", reply_markup=get_logged_in_menu())
             else:
                 del user_sessions[chat_id]
                 bot.send_message(chat_id, f"{status}\n\nجرّب الضغط على زر تسجيل الدخول مجدداً.", reply_markup=get_main_menu())
@@ -206,7 +215,7 @@ class WebServerHandler(BaseHTTPRequestHandler):
         self.wfile.write("البوت التفاعلي المطور أونلاين 24 ساعة!".encode("utf-8"))
 
 def run_web_server():
-    server_address = ('', 10000) # بورت 10000 الإلزامي في ريندر
+    server_address = ('', 10000) 
     httpd = HTTPServer(server_address, WebServerHandler)
     httpd.serve_forever()
 
@@ -216,9 +225,7 @@ def run_web_server():
 if __name__ == "__main__":
     print("🚀 جاري بدء تشغيل البوت التفاعلي بالكامل...")
     
-    # تشغيل خادم الويب في خلفية منفصلة لاستقبال إشارات الإيقاظ
     web_thread = threading.Thread(target=run_web_server, daemon=True)
     web_thread.start()
     
-    # بدء الاستماع والاتصال المستمر مع سيرفرات تليجرام
     bot.infinity_polling()
