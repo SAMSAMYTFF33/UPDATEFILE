@@ -7,7 +7,7 @@ from telebot import types
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # ==========================================
-# الإعدادات الأساسية
+# الإعدادات الأساسية وتوكن البوت الخاص بك
 # ==========================================
 TELEGRAM_TOKEN = "8288533297:AAGMDEG1feHpX6887h1kVhmSGsL0Y6SpF04"
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
@@ -21,61 +21,71 @@ HEADERS = {
     "Referer": BASE_URL
 }
 
-# ذاكرة مؤقتة لتخزين بيانات المستخدمين وجلساتهم أثناء استخدام البوت
+# ذاكرة السيرفر لتخزين الحالات المؤقتة للمستخدمين وجلساتهم
 user_sessions = {}
 user_data_store = {}
 
 # ==========================================
-# دالة الاتصال بالموقع وجلب البيانات
+# دالة الاتصال بالموقع وفحص البيانات
 # ==========================================
 def fetch_site_data(username, password):
     session = requests.Session()
     try:
-        session.get(BASE_URL, headers=HEADERS, timeout=10)
+        session.get(BASE_URL, headers=HEADERS, timeout=12)
         login_data = {
             "signin[username]": username,
             "signin[password]": password,
             "signin[remember]": "1",
             "signin[refer_url]": "@office_initial"
         }
-        login_response = session.post(LOGIN_URL, data=login_data, headers=HEADERS, timeout=10)
+        login_response = session.post(LOGIN_URL, data=login_data, headers=HEADERS, timeout=12)
         
         if login_response.status_code != 200:
             return None, "❌ خطأ في الاتصال بالموقع أثناء تسجيل الدخول."
 
-        r = session.get(TARGET_URL, headers=HEADERS, timeout=10)
+        r = session.get(TARGET_URL, headers=HEADERS, timeout=12)
         if "Выход" not in r.text:
             return None, "❌ فشل تسجيل الدخول. تأكد من صحة الإيميل وكلمة المرور."
 
         soup = BeautifulSoup(r.text, "html.parser")
         
-        # 💰 استخراج الرصيد (روبل)
+        # 💰 استخراج الرصيد الحالي (روبل) من أعلى الصفحة
         balance = "*"
         balance_tag = soup.find("span", {"class": "balance"}) or soup.find(text=lambda t: "руб" in t)
         if balance_tag:
-            balance = balance_tag.get_text(strip=True).replace("руб.", "").strip()
+            balance = balance_tag.get_text(strip=True).replace("руб.", "").replace("руб", "").strip()
 
-        # 📋 حساب عدد المهام
-        tasks_count = 0
+        # 📋 حساب عدد المهام وفحص أسعارها
+        tasks_prices = []
         table = soup.find("table")
         if table:
             rows = table.find_all("tr")
             for row in rows[1:]:
                 cells = row.find_all("td")
                 if len(cells) >= 8:
+                    title_cell = cells[1]
+                    price_cell = cells[2]
+                    
+                    # تنظيف السعر وفحصه
+                    price = price_cell.get_text(strip=True)
+                    if not price or price == "" or "---" in price:
+                        price = "*"
+                    else:
+                        price = price.replace("руб.", "").replace("руб", "").strip()
+                    
                     actions_cell = cells[-1]
                     actions_text = actions_cell.get_text(strip=True)
                     has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
                     if has_link:
-                        tasks_count += 1
+                        tasks_prices.append(price)
 
-        return {"balance": balance, "tasks": tasks_count}, "SUCCESS"
+        return {"balance": balance, "tasks": tasks_prices}, "SUCCESS"
 
     except Exception as e:
-        return None, f"⚠️ حدث خطأ أثناء الاتصال: {str(e)}"
+        return None, f"⚠️ حدث خطأ أثناء الاتصال بالموقع: {str(e)}"
 
 # ==========================================
-# لوحات الأزرار تفاعلية (Keyboards)
+# تصميم قوائم الأزرار (Keyboards)
 # ==========================================
 def get_main_menu():
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
@@ -90,110 +100,125 @@ def get_logged_in_menu():
     return markup
 
 # ==========================================
-# استقبال الأوامر والرسائل (تليجرام)
+# استقبال الأوامر والرسائل التفاعلية
 # ==========================================
 
-# عند إرسال /start
+# 1. استقبال أمر /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     chat_id = message.chat.id
     if chat_id in user_data_store:
-        bot.send_message(chat_id, "👋 أنت مسجل الدخول بالفعل بالخلفية!", reply_markup=get_logged_in_menu())
+        bot.send_message(chat_id, "👋 أنت مسجل الدخول بالفعل وبشكل نشط بالخلفية!", reply_markup=get_logged_in_menu())
     else:
-        bot.send_message(chat_id, "📌 أهلاً بك في بوت صائد المهام. اختر من القائمة أدناه للبدء:", reply_markup=get_main_menu())
+        bot.send_message(chat_id, "📌 أهلاً بك في بوت صائد المهام التفاعلي.\nإليك الخيارات المتاحة بالأسفل:", reply_markup=get_main_menu())
 
-# معالجة النصوص والأزرار
+# 2. استقبال الأزرار والنصوص العامة
 @bot.message_handler(func=lambda message: True)
 def handle_messages(message):
     chat_id = message.chat.id
     text = message.text
 
-    # الضغط على زر تسجيل الدخول
+    # الضغط على زر (1) تسجيل دخول
     if text == "1️⃣ تسجيل دخول" or text == "1":
-        bot.send_message(chat_id, "📬 قم بكتابة اسم المستخدم أو الـ Gmail الخاص بك:")
+        bot.send_message(chat_id, "📬 قم بكتابة اسم المستخدم أو الـ Gmail الخاص بك للموقع:")
         user_sessions[chat_id] = {'step': 'WAITING_EMAIL'}
         
-    # الضغط على زر تسجيل الخروج
+    # الضغط على زر (3) تسجيل خروج
     elif text == "3️⃣ تسجيل خروج" or text == "3":
         if chat_id in user_data_store:
             del user_data_store[chat_id]
         if chat_id in user_sessions:
             del user_sessions[chat_id]
-        bot.send_message(chat_id, "🔒 تم تسجيل الخروج بنجاح وحذف بيانات الجلسة.", reply_markup=get_main_menu())
+        bot.send_message(chat_id, "🔒 تم تسجيل الخروج بنجاح وحذف بيانات جلستك المؤقتة.", reply_markup=get_main_menu())
 
-    # الضغط على زر تحديث البيانات
+    # الضغط على زر (4) تحديث البيانات وعرض المهام
     elif text == "4️⃣ تحديث البيانات" or text == "4":
         if chat_id not in user_data_store:
-            bot.send_message(chat_id, "⚠️ لم تقم بتسجيل الدخول بعد!", reply_markup=get_main_menu())
+            bot.send_message(chat_id, "⚠️ عذراً، لم تقم بتسجيل الدخول بعد!", reply_markup=get_main_menu())
             return
         
-        bot.send_message(chat_id, "🔄 جاري تحديث وفحص البيانات الحالية من الموقع...")
+        bot.send_message(chat_id, "🔄 جاري فحص الموقع وتحديث البيانات الآن...")
         creds = user_data_store[chat_id]
         data, status = fetch_site_data(creds['email'], creds['password'])
         
         if status == "SUCCESS":
-            msg = f"📊 *تحديث البيانات الحالية:*\n\n💰 رصيد الروبل لديك: `{data['balance']}` روبل\n📋 عدد المهام المتوفرة: `{data['tasks']}`"
-            bot.send_message(chat_id, msg, parse_mode="Markdown", reply_markup=get_logged_in_menu())
+            total_tasks = len(data['tasks'])
+            
+            # في حال عدم وجود أي مهمة
+            if total_tasks == 0:
+                bot.send_message(chat_id, "لا توجد أي مهمة", reply_markup=get_logged_in_menu())
+            else:
+                # في حال وجود مهام، يرسل السعر بشكل مبسط لكل مهمة
+                for price in data['tasks']:
+                    bot.send_message(chat_id, f"توجد مهمة واحد بسعر {price} روبل", reply_markup=get_logged_in_menu())
+                
+                # إرسال تحديث الرصيد الحالي منفصلاً في النهاية للاطلاع
+                bot.send_message(chat_id, f"💰 رصيد الروبل الحالي لديك: `{data['balance']}` روبل", parse_mode="Markdown")
         else:
             bot.send_message(chat_id, status, reply_markup=get_logged_in_menu())
 
-    # معالجة خطوات إدخال البيانات (الـ Steps)
+    # نظام تتبع الخطوات (Steps) لإدخال الإيميل والباسورد
     elif chat_id in user_sessions:
         current_step = user_sessions[chat_id]['step']
         
-        # استقبال الإيميل
+        # استلام الإيميل
         if current_step == 'WAITING_EMAIL':
             user_sessions[chat_id]['email'] = text
             user_sessions[chat_id]['step'] = 'WAITING_PASSWORD'
-            bot.send_message(chat_id, "🔐 ممتاز، الآن أرسل كلمة المرور الخاصة بحسابك:")
+            bot.send_message(chat_id, "🔐 ممتاز، الآن أرسل كلمة المرور (Password) الخاصة بحسابك:")
             
-        # استقبال الباسورد والبدء في الفحص والتشغيل
+        # استلام الباسورد والتنفيذ الفوري
         elif current_step == 'WAITING_PASSWORD':
             email = user_sessions[chat_id]['email']
             password = text
-            bot.send_message(chat_id, "⏳ جاري تسجيل الدخول وفحص الحساب، يرجى الانتظار...")
+            bot.send_message(chat_id, "⏳ جاري فحص الحساب ومحاولة تسجيل الدخول للموقع...")
             
             data, status = fetch_site_data(email, password)
             
             if status == "SUCCESS":
-                # حفظ البيانات للتمكن من التحديث لاحقاً عبر زر (4)
+                # حفظ البيانات بأمان داخل ذاكرة السيرفر
                 user_data_store[chat_id] = {'email': email, 'password': password}
                 del user_sessions[chat_id]
                 
-                success_msg = f"✅ تم تسجيل الدخول بنجاح!\n\n💰 رصيد الروبل الحالي: `{data['balance']}` روبل\n📋 عدد المهام المتوفرة الآن: `{data['tasks']}`"
-                bot.send_message(chat_id, success_msg, parse_mode="Markdown", reply_markup=get_logged_in_menu())
+                total_tasks = len(data['tasks'])
+                bot.send_message(chat_id, f"✅ تم تسجيل الدخول بنجاح!\n💰 رصيد الروبل لديك: `{data['balance']}` روبل", parse_mode="Markdown")
+                
+                # فحص المهام الأولي عند الدخول مباشرة
+                if total_tasks == 0:
+                    bot.send_message(chat_id, "لا توجد أي مهمة", reply_markup=get_logged_in_menu())
+                else:
+                    for price in data['tasks']:
+                        bot.send_message(chat_id, f"توجد مهمة واحد بسعر {price} روبل", reply_markup=get_logged_in_menu())
             else:
-                # في حال الفشل نتيح له المحاولة مجدداً
                 del user_sessions[chat_id]
-                bot.send_message(chat_id, f"{status}\n\nجرّب الضغط على زر تسجيل الدخول مرة أخرى.", reply_markup=get_main_menu())
+                bot.send_message(chat_id, f"{status}\n\nجرّب الضغط على زر تسجيل الدخول مجدداً.", reply_markup=get_main_menu())
     else:
-        bot.send_message(chat_id, "يرجى استخدام الأزرار المتوفرة في القائمة بالأسفل.", reply_markup=get_main_menu())
+        bot.send_message(chat_id, "يرجى استخدام قائمة الأزرار الظاهرة في الأسفل للتحكم بالبوت.", reply_markup=get_main_menu())
 
 # ==========================================
-# تشغيل السيرفر لـ Render في الخلفية لمنع النوم
+# سيرفر ويب مصغر لاستقبال اتصالات Render وحمايته
 # ==========================================
 class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write("البوت التفاعلي يعمل أونلاين بنجاح!".encode("utf-8"))
+        self.wfile.write("البوت التفاعلي المطور أونلاين 24 ساعة!".encode("utf-8"))
 
 def run_web_server():
-    server_address = ('', 10000)
+    server_address = ('', 10000) # بورت 10000 الإلزامي في ريندر
     httpd = HTTPServer(server_address, WebServerHandler)
     httpd.serve_forever()
 
 # ==========================================
-# انطلاق البوت
+# نقطة انطلاق البوت
 # ==========================================
 if __name__ == "__main__":
-    print("🚀 جاري بدء تشغيل البوت التفاعلي المطور...")
+    print("🚀 جاري بدء تشغيل البوت التفاعلي بالكامل...")
     
-    # تشغيل سيرفر الويب الخاص بـ Render في Thread منفصل
+    # تشغيل خادم الويب في خلفية منفصلة لاستقبال إشارات الإيقاظ
     web_thread = threading.Thread(target=run_web_server, daemon=True)
     web_thread.start()
     
-    # تشغيل استقبال رسائل تليجرام بشكل مستمر (Polling)
-    # ملاحظة: Polling المستمر يرسل ويستقبل إشارات بشكل دائم مما يضمن بقاء سيرفر Render نشطاً
+    # بدء الاستماع والاتصال المستمر مع سيرفرات تليجرام
     bot.infinity_polling()
