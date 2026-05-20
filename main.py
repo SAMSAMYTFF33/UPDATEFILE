@@ -26,24 +26,12 @@ TELEGRAM_TOKEN = "8288533297:AAGMDEG1feHpX6887h1kVhmSGsL0Y6SpF04"
 TELEGRAM_CHAT_ID = "7638322813"
 
 # ==========================================
-# دالة إرسال الإشعارات
+# دالة إرسال الإشعارات والتقارير الدورية
 # ==========================================
-def send_notification(title, price, link):
+def send_telegram_message(message):
     """
-    تقوم هذه الدالة بطباعة الإشعار وإرساله إلى تليجرام
+    دالة عامة لإرسال أي نص مباشرة إلى تليجرام
     """
-    print(f"\n🔔 [إشعار]: {title}")
-    print(f"💰 السعر: {price} روبل")
-    print(f"🔗 الرابط: {link}\n")
-    
-    # صياغة نص الرسالة لتليجرام
-    message = (
-        f"🔔 *إشعار من السكريبت!*\n\n"
-        f"📌 *الموضوع:* {title}\n"
-        f"💰 *السعر:* {price} روبل\n\n"
-        f"🔗 [اضغط هنا لفتح الرابط]({link})"
-    )
-    
     telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
@@ -51,13 +39,12 @@ def send_notification(title, price, link):
         "parse_mode": "Markdown",
         "disable_web_page_preview": False
     }
-    
     try:
         response = requests.post(telegram_url, json=payload, timeout=10)
         if response.status_code == 200:
-            print("✅ تم إرسال الإشعار بنجاح إلى تليجرام.")
+            print("✅ تم إرسال الرسالة بنجاح إلى تليجرام.")
         else:
-            print(f"⚠️ فشل إرسال الإشعار لتليجرام: {response.text}")
+            print(f"⚠️ فشل إرسال الرسالة لتليجرام: {response.text}")
     except Exception as e:
         print(f"⚠️ خطأ أثناء الاتصال بتليجرام: {e}")
 
@@ -81,21 +68,21 @@ def check_for_orders():
         
         if login_response.status_code != 200:
             print("❌ فشل الاتصال بالموقع أثناء تسجيل الدخول.")
-            return
+            return "خطأ في الاتصال بالموقع أثناء تسجيل الدخول."
 
         print("📥 جاري فحص صفحة المهام...")
         r = session.get(TARGET_URL, headers=HEADERS, timeout=15)
         
         if "Выход" not in r.text:
             print("❌ فشل تسجيل الدخول. تأكد من صحة الحساب.")
-            return
+            return "فشل تسجيل الدخول. تأكد من صحة الحساب وكلمة المرور."
 
         soup = BeautifulSoup(r.text, "html.parser")
         table = soup.find("table") 
         
         if not table:
             print("⚠️ لم يتم العثور على جدول المهام حالياً.")
-            return
+            return "تم تسجيل الدخول بنجاح، ولكن لم يتم العثور على جدول المهام حالياً في الصفحة."
             
         rows = table.find_all("tr")
         available_jobs_count = 0
@@ -118,29 +105,43 @@ def check_for_orders():
                     if link_tag and link_tag.has_attr("href"):
                         job_link = BASE_URL + link_tag["href"]
                     
-                    send_notification(f"مهمة متاحة للعمل فوراً: {title}", price, job_link)
+                    # إرسال تفاصيل المهمة فوراً عند العثور عليها
+                    job_message = (
+                        f"🔔 *مهمة جديدة متاحة للعمل فوراً!*\n\n"
+                        f"📌 *العنوان:* {title}\n"
+                        f"💰 *السعر:* {price} روبل\n\n"
+                        f"🔗 [اضغط هنا لفتح المهمة مباشرة]({job_link})"
+                    )
+                    send_telegram_message(job_message)
                     
         if available_jobs_count == 0:
             print("🔍 تم الفحص: لا توجد مهام متاحة حالياً.")
+            return "🔍 *تقرير الفحص الدوري:*\nتم تسجيل الدخول بنجاح وفحص الجدول، لا توجد مهام متاحة حالياً. (العدد: 0)"
         else:
             print(f"✅ إجمالي المهام المتاحة: {available_jobs_count}")
+            return f"✅ *تقرير الفحص الدوري:*\nتم العثور على إجمالي `{available_jobs_count}` من المهام المتاحة للعمل!"
 
     except Exception as e:
         print(f"⚠️ حدث خطأ أثناء الفحص: {e}")
+        return f"⚠️ *حدث خطأ أثناء الفحص الدوري:* {str(e)}"
 
 # ==========================================
-# حلقة الفحص المستمرة
+# حلقة الفحص المستمرة (كل 5 دقائق)
 # ==========================================
 def background_loop():
-    # إرسال رسالة تجريبية فوراً عند بدء تشغيل السيرفر للتأكد من التليجرام
-    print("📢 جاري إرسال رسالة التجربة إلى تليجرام...")
-    send_notification("السكريبت تم تشغيله بنجاح على Render! 🚀", "0.00", "https://render.com")
+    print("📢 جاري إرسال رسالة التفعيل الأولى إلى تليجرام...")
+    send_telegram_message("🚀 تم تشغيل سكريبت الفحص والتقرير الدوري بنجاح على Render!")
     
     while True:
-        check_for_orders()
+        # تنفيذ الفحص والحصول على نص التقرير الدوري
+        report_status = check_for_orders()
+        
+        # إرسال التقرير الدوري إلى تليجرام (سواء وجد مهام أم لا لتعلم أن السكريبت يعمل)
+        send_telegram_message(report_status)
+        
         print("-" * 50)
-        print("💤 في انتظار التحديث القادم بعد 3 دقائق...")
-        time.sleep(180)
+        print("💤 في انتظار التحديث القادم بعد 5 دقائق...")
+        time.sleep(300) # 300 ثانية تعادل 5 دقائق تماماً
 
 # ==========================================
 # سيرفر ويب وهمي لإرضاء منصة Render
@@ -150,10 +151,10 @@ class WebServerHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write("السكريبت يعمل في الخلفية بنجاح!".encode("utf-8"))
+        self.wfile.write("السكريبت يعمل ويرسل تقارير دورية كل 5 دقائق!".encode("utf-8"))
 
 def run_web_server():
-    server_address = ('', 10000) # بورت 10000 هو الافتراضي في Render
+    server_address = ('', 10000)
     httpd = HTTPServer(server_address, WebServerHandler)
     print("🌐 تم تشغيل سيرفر الويب الوهمي للبقاء أونلاين...")
     httpd.serve_forever()
@@ -164,9 +165,9 @@ def run_web_server():
 if __name__ == "__main__":
     print("🚀 تم بدء تشغيل السكريبت بالكامل...")
     
-    # تشغيل حلقة الفحص في خلفية منفصلة
+    # تشغيل حلقة الفحص والتقارير في خلفية منفصلة
     thread = threading.Thread(target=background_loop, daemon=True)
     thread.start()
     
-    # تشغيل سيرفر الويب في الواجهة الأساسية ليستجيب لـ Render
+    # تشغيل سيرفر الويب الأساسي ليستجيب لـ Render
     run_web_server()
