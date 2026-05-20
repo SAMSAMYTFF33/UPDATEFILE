@@ -1,6 +1,8 @@
 import time
 import requests
 from bs4 import BeautifulSoup
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # ==========================================
 # بيانات تسجيل الدخول والإعدادات
@@ -24,26 +26,22 @@ TELEGRAM_TOKEN = "8288533297:AAGMDEG1feHpX6887h1kVhmSGsL0Y6SpF04"
 TELEGRAM_CHAT_ID = "7638322813"
 
 # ==========================================
-# دالة إرسال الإشعارات وإصدار الصوت
+# دالة إرسال الإشعارات
 # ==========================================
 def send_notification(title, price, link):
     """
-    تقوم هذه الدالة بإصدار صوت تنبيه، طباعة الإشعار، وإرساله إلى تليجرام
+    تقوم هذه الدالة بطباعة الإشعار وإرساله إلى تليجرام
     """
-    # 🔊 إصدار صوت صفارة (Beep) - سيعمل في كونسول الكمبيوتر وتطبيق Pydroid
-    print("\a" * 3) # تم تكرارها 3 مرات ليكون الصوت واضحاً وممتداً
-    
-    print(f"\n🔔 [إشعار جديد]: مهمة متاحة للعمل فوراً!")
-    print(f"📌 العنوان: {title}")
+    print(f"\n🔔 [إشعار]: {title}")
     print(f"💰 السعر: {price} روبل")
     print(f"🔗 الرابط: {link}\n")
     
     # صياغة نص الرسالة لتليجرام
     message = (
-        f"🔔 *مهمة جديدة متاحة!*\n\n"
-        f"📌 *العنوان:* {title}\n"
+        f"🔔 *إشعار من السكريبت!*\n\n"
+        f"📌 *الموضوع:* {title}\n"
         f"💰 *السعر:* {price} روبل\n\n"
-        f"🔗 [اضغط هنا لفتح المهمة مباشرة]({link})"
+        f"🔗 [اضغط هنا لفتح الرابط]({link})"
     )
     
     telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -120,8 +118,7 @@ def check_for_orders():
                     if link_tag and link_tag.has_attr("href"):
                         job_link = BASE_URL + link_tag["href"]
                     
-                    # استدعاء الدالة (ستصدر الصوت وترسل تليجرام)
-                    send_notification(title, price, job_link)
+                    send_notification(f"مهمة متاحة للعمل فوراً: {title}", price, job_link)
                     
         if available_jobs_count == 0:
             print("🔍 تم الفحص: لا توجد مهام متاحة حالياً.")
@@ -132,15 +129,44 @@ def check_for_orders():
         print(f"⚠️ حدث خطأ أثناء الفحص: {e}")
 
 # ==========================================
-# تشغيل البرنامج بشكل مستمر كل 3 دقائق
+# حلقة الفحص المستمرة
 # ==========================================
-if __name__ == "__main__":
-    print("🚀 تم تشغيل كود صائد المهام التلقائي مع تنبيه صوتي...")
-    print("⏱ سيقوم البرنامج بالفحص الآن ثم يكرر العملية كل 3 دقائق تلقائياً.")
-    print("-" * 50)
+def background_loop():
+    # إرسال رسالة تجريبية فوراً عند بدء تشغيل السيرفر للتأكد من التليجرام
+    print("📢 جاري إرسال رسالة التجربة إلى تليجرام...")
+    send_notification("السكريبت تم تشغيله بنجاح على Render! 🚀", "0.00", "https://render.com")
     
     while True:
         check_for_orders()
         print("-" * 50)
         print("💤 في انتظار التحديث القادم بعد 3 دقائق...")
         time.sleep(180)
+
+# ==========================================
+# سيرفر ويب وهمي لإرضاء منصة Render
+# ==========================================
+class WebServerHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write("السكريبت يعمل في الخلفية بنجاح!".encode("utf-8"))
+
+def run_web_server():
+    server_address = ('', 10000) # بورت 10000 هو الافتراضي في Render
+    httpd = HTTPServer(server_address, WebServerHandler)
+    print("🌐 تم تشغيل سيرفر الويب الوهمي للبقاء أونلاين...")
+    httpd.serve_forever()
+
+# ==========================================
+# نقطة انطلاق البرنامج
+# ==========================================
+if __name__ == "__main__":
+    print("🚀 تم بدء تشغيل السكريبت بالكامل...")
+    
+    # تشغيل حلقة الفحص في خلفية منفصلة
+    thread = threading.Thread(target=background_loop, daemon=True)
+    thread.start()
+    
+    # تشغيل سيرفر الويب في الواجهة الأساسية ليستجيب لـ Render
+    run_web_server()
