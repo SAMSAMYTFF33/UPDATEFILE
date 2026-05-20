@@ -2,13 +2,15 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import threading
+import telebot
+from telebot import types
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # ==========================================
-# بيانات تسجيل الدخول والإعدادات
+# الإعدادات الأساسية
 # ==========================================
-USERNAME = "miricanmoroco@gmail.com"
-PASSWORD = "miricanmoroco" 
+TELEGRAM_TOKEN = "8288533297:AAGMDEG1feHpX6887h1kVhmSGsL0Y6SpF04"
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 BASE_URL = "https://forumok.com"
 LOGIN_URL = "https://forumok.com/login"
@@ -19,119 +21,163 @@ HEADERS = {
     "Referer": BASE_URL
 }
 
-# ==========================================
-# إعدادات معرفات (IDs) تليجرام
-# ==========================================
-TELEGRAM_TOKEN = "8288533297:AAGMDEG1feHpX6887h1kVhmSGsL0Y6SpF04"
-
-ID_TASKS = "7638322813"   # الحساب الخاص بالمهام (عند وجود مهمة)
-ID_REPORT = "8486184645"  # الحساب الخاص بالتقرير (عند عدم وجود مهمة)
+# ذاكرة مؤقتة لتخزين بيانات المستخدمين وجلساتهم أثناء استخدام البوت
+user_sessions = {}
+user_data_store = {}
 
 # ==========================================
-# دالة إرسال الإشعارات
+# دالة الاتصال بالموقع وجلب البيانات
 # ==========================================
-def send_telegram_message(chat_id, message):
-    telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "Markdown",
-        "disable_web_page_preview": True
-    }
+def fetch_site_data(username, password):
+    session = requests.Session()
     try:
-        requests.post(telegram_url, json=payload, timeout=10)
-    except Exception as e:
-        print(f"⚠️ خطأ أثناء الاتصال بتليجرام: {e}")
-
-# ==========================================
-# الحلقة الموحدة للفحص (تمنع التكرار والتداخل)
-# ==========================================
-def smart_check_loop():
-    # عداد داخلي لحساب وقت التقرير (كل 15 دقيقة)
-    # الفحص يتم كل 5 دقائق، إذن كل 3 دورات فحص تعادل 15 دقيقة
-    loop_counter = 0
-
-    while True:
-        loop_counter += 1
-        session = requests.Session()
-        print(f"🔄 [بدء الفحص الدورة رقم {loop_counter}]...")
+        session.get(BASE_URL, headers=HEADERS, timeout=10)
+        login_data = {
+            "signin[username]": username,
+            "signin[password]": password,
+            "signin[remember]": "1",
+            "signin[refer_url]": "@office_initial"
+        }
+        login_response = session.post(LOGIN_URL, data=login_data, headers=HEADERS, timeout=10)
         
-        try:
-            session.get(BASE_URL, headers=HEADERS, timeout=15)
-            login_data = {
-                "signin[username]": USERNAME,
-                "signin[password]": PASSWORD,
-                "signin[remember]": "1",
-                "signin[refer_url]": "@office_initial"
-            }
-            login_response = session.post(LOGIN_URL, data=login_data, headers=HEADERS, timeout=15)
-            
-            if login_response.status_code == 200:
-                r = session.get(TARGET_URL, headers=HEADERS, timeout=15)
-                
-                if "Выход" in r.text:
-                    soup = BeautifulSoup(r.text, "html.parser")
-                    table = soup.find("table") 
-                    
-                    jobs_found = []
-                    if table:
-                        rows = table.find_all("tr")
-                        for row in rows[1:]:
-                            cells = row.find_all("td")
-                            if len(cells) >= 8:
-                                title_cell = cells[1]
-                                price_cell = cells[2]
-                                
-                                # استخراج السعر وتدقيقه
-                                price = price_cell.get_text(strip=True)
-                                if not price or price == "" or "---" in price:
-                                    price = "*"
-                                else:
-                                    # إبقاء الأرقام فقط أو الكلمة المكتوبة
-                                    price = price.replace("руб.", "").strip()
-                                
-                                actions_cell = cells[-1] 
-                                actions_text = actions_cell.get_text(strip=True)
-                                has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
-                                
-                                if has_link:
-                                    jobs_found.append(price)
+        if login_response.status_code != 200:
+            return None, "❌ خطأ في الاتصال بالموقع أثناء تسجيل الدخول."
 
-                    # 🌟 [حالة وجود مهام] -> يرسل إلى ID_TASKS
-                    if len(jobs_found) > 0:
-                        for current_price in jobs_found:
-                            short_message = f"توجد مهمة واحد بسعر {current_price} روبل"
-                            send_telegram_message(ID_TASKS, short_message)
-                            print(f"🔥 تم إرسال إشعار بمهمة سعرها {current_price} للـ ID الخاص بالمهام.")
-                    
-                    # 🌟 [حالة عدم وجود مهام] -> يرسل إلى ID_REPORT كل 15 دقيقة (الدورة 1، 3، 6...) لمنع النوم
-                    else:
-                        print("🔍 لا توجد مهام حالياً في هذه الدورة.")
-                        if loop_counter >= 3: # تعادل 15 دقيقة تماماً
-                            send_telegram_message(ID_REPORT, "لا توجد أي مهمة")
-                            print("💤 تم إرسال تقرير (لا توجد أي مهمة) لحماية السيرفر من النوم.")
-                            loop_counter = 0 # تصفير العداد لإعادة الحساب
+        r = session.get(TARGET_URL, headers=HEADERS, timeout=10)
+        if "Выход" not in r.text:
+            return None, "❌ فشل تسجيل الدخول. تأكد من صحة الإيميل وكلمة المرور."
 
-                else:
-                    print("❌ فشل تسجيل الدخول للموقع.")
-            else:
-                print("❌ فشل الاتصال بالموقع.")
+        soup = BeautifulSoup(r.text, "html.parser")
+        
+        # 💰 استخراج الرصيد (روبل)
+        balance = "*"
+        balance_tag = soup.find("span", {"class": "balance"}) or soup.find(text=lambda t: "руб" in t)
+        if balance_tag:
+            balance = balance_tag.get_text(strip=True).replace("руб.", "").strip()
 
-        except Exception as e:
-            print(f"⚠️ حدث خطأ أثناء الفحص الحالي: {e}")
-            
-        print("💤 في انتظار الفحص القادم بعد 5 دقائق...")
-        time.sleep(300) # فحص منظم وثابت كل 5 دقائق تماماً بدلاً من 3
+        # 📋 حساب عدد المهام
+        tasks_count = 0
+        table = soup.find("table")
+        if table:
+            rows = table.find_all("tr")
+            for row in rows[1:]:
+                cells = row.find_all("td")
+                if len(cells) >= 8:
+                    actions_cell = cells[-1]
+                    actions_text = actions_cell.get_text(strip=True)
+                    has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
+                    if has_link:
+                        tasks_count += 1
+
+        return {"balance": balance, "tasks": tasks_count}, "SUCCESS"
+
+    except Exception as e:
+        return None, f"⚠️ حدث خطأ أثناء الاتصال: {str(e)}"
 
 # ==========================================
-# سيرفر ويب لاستقبال طلبات Render
+# لوحات الأزرار تفاعلية (Keyboards)
+# ==========================================
+def get_main_menu():
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add(types.KeyboardButton("1️⃣ تسجيل دخول"))
+    return markup
+
+def get_logged_in_menu():
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    btn_refresh = types.KeyboardButton("4️⃣ تحديث البيانات")
+    btn_logout = types.KeyboardButton("3️⃣ تسجيل خروج")
+    markup.add(btn_refresh, btn_logout)
+    return markup
+
+# ==========================================
+# استقبال الأوامر والرسائل (تليجرام)
+# ==========================================
+
+# عند إرسال /start
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    chat_id = message.chat.id
+    if chat_id in user_data_store:
+        bot.send_message(chat_id, "👋 أنت مسجل الدخول بالفعل بالخلفية!", reply_markup=get_logged_in_menu())
+    else:
+        bot.send_message(chat_id, "📌 أهلاً بك في بوت صائد المهام. اختر من القائمة أدناه للبدء:", reply_markup=get_main_menu())
+
+# معالجة النصوص والأزرار
+@bot.message_handler(func=lambda message: True)
+def handle_messages(message):
+    chat_id = message.chat.id
+    text = message.text
+
+    # الضغط على زر تسجيل الدخول
+    if text == "1️⃣ تسجيل دخول" or text == "1":
+        bot.send_message(chat_id, "📬 قم بكتابة اسم المستخدم أو الـ Gmail الخاص بك:")
+        user_sessions[chat_id] = {'step': 'WAITING_EMAIL'}
+        
+    # الضغط على زر تسجيل الخروج
+    elif text == "3️⃣ تسجيل خروج" or text == "3":
+        if chat_id in user_data_store:
+            del user_data_store[chat_id]
+        if chat_id in user_sessions:
+            del user_sessions[chat_id]
+        bot.send_message(chat_id, "🔒 تم تسجيل الخروج بنجاح وحذف بيانات الجلسة.", reply_markup=get_main_menu())
+
+    # الضغط على زر تحديث البيانات
+    elif text == "4️⃣ تحديث البيانات" or text == "4":
+        if chat_id not in user_data_store:
+            bot.send_message(chat_id, "⚠️ لم تقم بتسجيل الدخول بعد!", reply_markup=get_main_menu())
+            return
+        
+        bot.send_message(chat_id, "🔄 جاري تحديث وفحص البيانات الحالية من الموقع...")
+        creds = user_data_store[chat_id]
+        data, status = fetch_site_data(creds['email'], creds['password'])
+        
+        if status == "SUCCESS":
+            msg = f"📊 *تحديث البيانات الحالية:*\n\n💰 رصيد الروبل لديك: `{data['balance']}` روبل\n📋 عدد المهام المتوفرة: `{data['tasks']}`"
+            bot.send_message(chat_id, msg, parse_mode="Markdown", reply_markup=get_logged_in_menu())
+        else:
+            bot.send_message(chat_id, status, reply_markup=get_logged_in_menu())
+
+    # معالجة خطوات إدخال البيانات (الـ Steps)
+    elif chat_id in user_sessions:
+        current_step = user_sessions[chat_id]['step']
+        
+        # استقبال الإيميل
+        if current_step == 'WAITING_EMAIL':
+            user_sessions[chat_id]['email'] = text
+            user_sessions[chat_id]['step'] = 'WAITING_PASSWORD'
+            bot.send_message(chat_id, "🔐 ممتاز، الآن أرسل كلمة المرور الخاصة بحسابك:")
+            
+        # استقبال الباسورد والبدء في الفحص والتشغيل
+        elif current_step == 'WAITING_PASSWORD':
+            email = user_sessions[chat_id]['email']
+            password = text
+            bot.send_message(chat_id, "⏳ جاري تسجيل الدخول وفحص الحساب، يرجى الانتظار...")
+            
+            data, status = fetch_site_data(email, password)
+            
+            if status == "SUCCESS":
+                # حفظ البيانات للتمكن من التحديث لاحقاً عبر زر (4)
+                user_data_store[chat_id] = {'email': email, 'password': password}
+                del user_sessions[chat_id]
+                
+                success_msg = f"✅ تم تسجيل الدخول بنجاح!\n\n💰 رصيد الروبل الحالي: `{data['balance']}` روبل\n📋 عدد المهام المتوفرة الآن: `{data['tasks']}`"
+                bot.send_message(chat_id, success_msg, parse_mode="Markdown", reply_markup=get_logged_in_menu())
+            else:
+                # في حال الفشل نتيح له المحاولة مجدداً
+                del user_sessions[chat_id]
+                bot.send_message(chat_id, f"{status}\n\nجرّب الضغط على زر تسجيل الدخول مرة أخرى.", reply_markup=get_main_menu())
+    else:
+        bot.send_message(chat_id, "يرجى استخدام الأزرار المتوفرة في القائمة بالأسفل.", reply_markup=get_main_menu())
+
+# ==========================================
+# تشغيل السيرفر لـ Render في الخلفية لمنع النوم
 # ==========================================
 class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write("السكربت يعمل بنظام الفحص الموحد الذكي!".encode("utf-8"))
+        self.wfile.write("البوت التفاعلي يعمل أونلاين بنجاح!".encode("utf-8"))
 
 def run_web_server():
     server_address = ('', 10000)
@@ -139,14 +185,15 @@ def run_web_server():
     httpd.serve_forever()
 
 # ==========================================
-# نقطة الانطلاق
+# انطلاق البوت
 # ==========================================
 if __name__ == "__main__":
-    print("🚀 تم تشغيل السكريبت المحدث بنجاح...")
+    print("🚀 جاري بدء تشغيل البوت التفاعلي المطور...")
     
-    # تشغيل حلقة الفحص الذكية في الخلفية
-    t = threading.Thread(target=smart_check_loop, daemon=True)
-    t.start()
+    # تشغيل سيرفر الويب الخاص بـ Render في Thread منفصل
+    web_thread = threading.Thread(target=run_web_server, daemon=True)
+    web_thread.start()
     
-    # تشغيل سيرفر الويب لـ Render
-    run_web_server()
+    # تشغيل استقبال رسائل تليجرام بشكل مستمر (Polling)
+    # ملاحظة: Polling المستمر يرسل ويستقبل إشارات بشكل دائم مما يضمن بقاء سيرفر Render نشطاً
+    bot.infinity_polling()
