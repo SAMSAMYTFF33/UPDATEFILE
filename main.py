@@ -1,9 +1,12 @@
+مشكلة كود يضهر مهمة  واحد هده ولكن هي لا توجد 
+
+
 import time
 import requests
 from bs4 import BeautifulSoup
 import threading
 import re
-import os
+import os  # تم إضافة مكتبة os لقراءة الـ Port من Render
 import telebot
 from telebot import types
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -23,11 +26,12 @@ HEADERS = {
     "Referer": BASE_URL
 }
 
+# ذاكرة السيرفر لتخزين الحالات المؤقتة للمستخدمين وجلساتهم
 user_sessions = {}
 user_data_store = {}
 
 # ==========================================
-# دالة الاتصال بالموقع وفحص البيانات بدقة (تم تصحيحها)
+# دالة الاتصال بالموقع وفحص البيانات بدقة
 # ==========================================
 def fetch_site_data(username, password):
     session = requests.Session()
@@ -76,14 +80,12 @@ def fetch_site_data(username, password):
                     if price and "---" not in price:
                         price = price.replace("руб.", "").replace("руб", "").strip()
 
-                        # خطوة الحماية المضافة: التأكد من أن السعر يحتوي على أرقام فقط وتجاهل النصوص الروسية
-                        if re.search(r'\d', price) and not re.search(r'[а-яА-Я]', price):
-                            actions_cell = cells[-1]
-                            actions_text = actions_cell.get_text(strip=True)
-                            has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
+                        actions_cell = cells[-1]
+                        actions_text = actions_cell.get_text(strip=True)
+                        has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
 
-                            if has_link:
-                                tasks_prices.append(price)
+                        if has_link:
+                            tasks_prices.append(price)
 
         return {"balance": balance, "tasks": tasks_prices}, "SUCCESS"
 
@@ -198,12 +200,14 @@ class WebServerHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write("البوت التفاعلي المطور أونلاين 24 ساعة!".encode("utf-8"))
 
+    # إضافة دالة do_HEAD لحل مشكلة طلبات الفحص والتنبيهات
     def do_HEAD(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
 
 def run_web_server():
+    # قراءة المنفذ من بيئة Render تلقائياً، وإذا لم يجده يستعمل 10000 كاحتياطي
     port = int(os.environ.get("PORT", 10000))
     server_address = ('', port) 
     httpd = HTTPServer(server_address, WebServerHandler)
@@ -220,3 +224,5 @@ if __name__ == "__main__":
     web_thread.start()
 
     bot.infinity_polling()
+
+هل انت متأكد انه سيعمل وانه لديه علاقة مع رابط سابق
