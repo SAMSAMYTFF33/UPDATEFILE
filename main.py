@@ -1,4 +1,4 @@
-
+ 
 import time
 import requests
 from bs4 import BeautifulSoup
@@ -44,11 +44,11 @@ def fetch_site_data(username, password):
         login_response = session.post(LOGIN_URL, data=login_data, headers=HEADERS, timeout=12)
 
         if login_response.status_code != 200:
-            return None, "❌ خطأ في الاتصال بالموقع أثناء تسجيل الدخول."
+            return None, "❌ خطأ في الاتصال بالسيرفر الرئيسي أثناء تسجيل الدخول."
 
         r = session.get(TARGET_URL, headers=HEADERS, timeout=12)
         if "Выход" not in r.text:
-            return None, "❌ فشل تسجيل الدخول. تأكد من صحة الإيميل وكلمة المرور."
+            return None, "❌ فشل التحقق من الهوية. يرجى التأكد من صحة اسم المستخدم وكلمة المرور."
 
         soup = BeautifulSoup(r.text, "html.parser")
         for tag in soup(["script", "style"]):
@@ -75,6 +75,10 @@ def fetch_site_data(username, password):
                     price_cell = cells[2]
                     price = price_cell.get_text(strip=True)
 
+                    # تخطي صف العداد والإحصائيات الكلية للموقع لتجنب الأخطاء في العد
+                    if "Всего" in price or "найдено" in price or "Найдено" in price:
+                        continue 
+
                     if price and "---" not in price:
                         price = price.replace("руб.", "").replace("руб", "").strip()
 
@@ -88,20 +92,20 @@ def fetch_site_data(username, password):
         return {"balance": balance, "tasks": tasks_prices}, "SUCCESS"
 
     except Exception as e:
-        return None, f"⚠️ حدث خطأ أثناء الاتصال بالموقع: {str(e)}"
+        return None, f"⚠️ حدث خطأ غير متوقع أثناء الاتصال بالخادم: {str(e)}"
 
 # ==========================================
-# تصميم قوائم الأزرار (Keyboards)
+# تصميم قوائم الأزرار (Keyboards) بأسلوب رسمي
 # ==========================================
 def get_main_menu():
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add(types.KeyboardButton("1️⃣ تسجيل دخول"))
+    markup.add(types.KeyboardButton("🔐 تسجيل الدخول إلى النظام"))
     return markup
 
 def get_logged_in_menu():
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    btn_refresh = types.KeyboardButton("4️⃣ تحديث البيانات")
-    btn_logout = types.KeyboardButton("3️⃣ تسجيل خروج")
+    btn_refresh = types.KeyboardButton("🔄 تحديث البيانات الحالية")
+    btn_logout = types.KeyboardButton("🚪 إنهاء الجلسة (تسجيل الخروج)")
     markup.add(btn_refresh, btn_logout)
     return markup
 
@@ -112,45 +116,50 @@ def get_logged_in_menu():
 def send_welcome(message):
     chat_id = message.chat.id
     if chat_id in user_data_store:
-        bot.send_message(chat_id, "👋 أنت مسجل الدخول بالفعل وبشكل نشط بالخلفية!", reply_markup=get_logged_in_menu())
+        bot.send_message(chat_id, "ℹ️ النظام نشط بالفعل، وجلستكم الحالية لا تزال قائمة.", reply_markup=get_logged_in_menu())
     else:
-        bot.send_message(chat_id, "📌 أهلاً بك في بوت صائد المهام التفاعلي.\nإليك الخيارات المتاحة بالأسفل:", reply_markup=get_main_menu())
+        welcome_text = (
+            "مرحباً بك في النظام المؤتمت لإدارة ومراقبة المهام.\n\n"
+            "يرجى استخدام قائمة الخيارات المتاحة أدناه لبدء الاستخدام:"
+        )
+        bot.send_message(chat_id, welcome_text, reply_markup=get_main_menu())
 
 @bot.message_handler(func=lambda message: True)
 def handle_messages(message):
     chat_id = message.chat.id
     text = message.text
 
-    if text == "1️⃣ تسجيل دخول" or text == "1":
-        bot.send_message(chat_id, "📬 قم بكتابة اسم المستخدم أو الـ Gmail الخاص بك للموقع:")
+    if text == "🔐 تسجيل الدخول إلى النظام":
+        bot.send_message(chat_id, "يرجى إدخال اسم المستخدم أو البريد الإلكتروني المسجل:")
         user_sessions[chat_id] = {'step': 'WAITING_EMAIL'}
 
-    elif text == "3️⃣ تسجيل خروج" or text == "3":
+    elif text == "🚪 إنهاء الجلسة (تسجيل الخروج)":
         if chat_id in user_data_store:
             del user_data_store[chat_id]
         if chat_id in user_sessions:
             del user_sessions[chat_id]
-        bot.send_message(chat_id, "🔒 تم تسجيل الخروج بنجاح وحذف بيانات جلستك المؤقتة.", reply_markup=get_main_menu())
+        bot.send_message(chat_id, "🔒 تم إنهاء الجلسة بنجاح، وحذف بيانات الاعتماد المؤقتة بأمان.", reply_markup=get_main_menu())
 
-    elif text == "4️⃣ تحديث البيانات" or text == "4":
+    elif text == "🔄 تحديث البيانات الحالية":
         if chat_id not in user_data_store:
-            bot.send_message(chat_id, "⚠️ عذراً، لم تقم بتسجيل الدخول بعد!", reply_markup=get_main_menu())
+            bot.send_message(chat_id, "⚠️ تنبيه: لم يتم العثور على جلسة نشطة. يرجى تسجيل الدخول أولاً.", reply_markup=get_main_menu())
             return
 
-        bot.send_message(chat_id, "🔄 جاري فحص الموقع وتحديث البيانات الآن...")
+        bot.send_message(chat_id, "🔄 جاري فحص الخادم وتحديث البيانات، يرجى الانتظار...")
         creds = user_data_store[chat_id]
         data, status = fetch_site_data(creds['email'], creds['password'])
 
         if status == "SUCCESS":
             total_tasks = len(data['tasks'])
-            bot.send_message(chat_id, f"💰 رصيد الروبل الحالي المتاح لديك: `{data['balance']}` روبل", parse_mode="Markdown")
+            bot.send_message(chat_id, f"💰 الرصيد الحالي المتاح: `{data['balance']}` روبل", parse_mode="Markdown")
 
             if total_tasks == 0:
-                bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة حالياً.", reply_markup=get_logged_in_menu())
+                bot.send_message(chat_id, "📋 لا توجد أي مهام متاحة في الوقت الحالي.", reply_markup=get_logged_in_menu())
             else:
-                bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة:")
+                bot.send_message(chat_id, f"📊 تم رصد {total_tasks} من المهام النشطة:")
                 for price in data['tasks']:
-                    bot.send_message(chat_id, f"🔹 توجد مهمة متاحة بسعر: {price} روبل", reply_markup=get_logged_in_menu())
+                    # تم التأكيد هنا على إرسال النص فقط دون أي روابط أو معرفات للمهمة
+                    bot.send_message(chat_id, f"🔹 مهمة متاحة بقيمة: {price} روبل", reply_markup=get_logged_in_menu())
         else:
             bot.send_message(chat_id, status, reply_markup=get_logged_in_menu())
 
@@ -160,12 +169,12 @@ def handle_messages(message):
         if current_step == 'WAITING_EMAIL':
             user_sessions[chat_id]['email'] = text
             user_sessions[chat_id]['step'] = 'WAITING_PASSWORD'
-            bot.send_message(chat_id, "🔐 ممتاز، الآن أرسل كلمة المرور (Password) الخاصة بحسابك:")
+            bot.send_message(chat_id, "🔐 تم الحفظ. يرجى إدخال كلمة المرور الخاصة بحسابكم:")
 
         elif current_step == 'WAITING_PASSWORD':
             email = user_sessions[chat_id]['email']
             password = text
-            bot.send_message(chat_id, "⏳ جاري فحص الحساب ومحاولة تسجيل الدخول للموقع...")
+            bot.send_message(chat_id, "⏳ جاري التحقق من الهوية ومزامنة البيانات مع السيرفر الرئيسي...")
 
             data, status = fetch_site_data(email, password)
 
@@ -174,38 +183,37 @@ def handle_messages(message):
                 del user_sessions[chat_id]
 
                 total_tasks = len(data['tasks'])
-                bot.send_message(chat_id, f"✅ تم تسجيل الدخول بنجاح!\n💰 رصيد الروبل المتاح لديك: `{data['balance']}` روبل", parse_mode="Markdown")
+                bot.send_message(chat_id, f"✅ تم مصادقة الحساب بنجاح!\n💰 الرصيد الحالي المتاح: `{data['balance']}` روبل", parse_mode="Markdown")
 
                 if total_tasks == 0:
-                    bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة حالياً.", reply_markup=get_logged_in_menu())
+                    bot.send_message(chat_id, "📋 لا توجد أي مهام متاحة في الوقت الحالي.", reply_markup=get_logged_in_menu())
                 else:
-                    bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة:")
+                    bot.send_message(chat_id, f"📊 تم رصد {total_tasks} من المهام النشطة:")
                     for price in data['tasks']:
-                        bot.send_message(chat_id, f"🔹 توجد مهمة متاحة بسعر: {price} روبل", reply_markup=get_logged_in_menu())
+                        # يرسل السعر فقط التزاماً بطلبك بعدم عرض الروابط
+                        bot.send_message(chat_id, f"🔹 مهمة متاحة بقيمة: {price} روبل", reply_markup=get_logged_in_menu())
             else:
                 del user_sessions[chat_id]
-                bot.send_message(chat_id, f"{status}\n\nجرّب الضغط على زر تسجيل الدخول مجدداً.", reply_markup=get_main_menu())
+                bot.send_message(chat_id, f"{status}\n\nيرجى المحاولة مجدداً عن طريق الضغط على زر تسجيل الدخول.", reply_markup=get_main_menu())
     else:
-        bot.send_message(chat_id, "يرجى استخدام قائمة الأزرار الظاهرة في الأسفل للتحكم بالبوت.", reply_markup=get_main_menu())
+        bot.send_message(chat_id, "⚠️ أمر غير معروف. يرجى استخدام لوحة التحكم المظهرة أسفل الشاشة.", reply_markup=get_main_menu())
 
 # ==========================================
-# سيرفر ويب مطور لاستقبال اتصالات Render و UptimeRobot
+# سيرفر ويب لاستقبال اتصالات التوفر (Uptime)
 # ==========================================
 class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write("البوت التفاعلي المطور أونلاين 24 ساعة!".encode("utf-8"))
+        self.wfile.write("النظام البرمجي المؤتمت يعمل بكفاءة عالية (متصل)".encode("utf-8"))
 
-    # إضافة دالة do_HEAD لحل مشكلة طلبات الفحص والتنبيهات
     def do_HEAD(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
 
 def run_web_server():
-    # قراءة المنفذ من بيئة Render تلقائياً، وإذا لم يجده يستعمل 10000 كاحتياطي
     port = int(os.environ.get("PORT", 10000))
     server_address = ('', port) 
     httpd = HTTPServer(server_address, WebServerHandler)
@@ -216,11 +224,9 @@ def run_web_server():
 # نقطة انطلاق البوت
 # ==========================================
 if __name__ == "__main__":
-    print("🚀 جاري بدء تشغيل البوت التفاعلي بالكامل...")
+    print("🚀 جاري بدء تشغيل النظام المؤتمت بالكامل...")
 
     web_thread = threading.Thread(target=run_web_server, daemon=True)
     web_thread.start()
 
     bot.infinity_polling()
-
-هل انت متأكد انه سيعمل وانه لديه علاقة مع رابط سابق
