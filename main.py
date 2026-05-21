@@ -27,7 +27,7 @@ user_sessions = {}
 user_data_store = {}
 
 # ==========================================
-# دالة الاتصال بالموقع وفحص البيانات المتاحة فعلياً
+# دالة الاتصال بالموقع وفحص البيانات بدقة (تم تصحيحها)
 # ==========================================
 def fetch_site_data(username, password):
     session = requests.Session()
@@ -49,10 +49,9 @@ def fetch_site_data(username, password):
             return None, "❌ فشل تسجيل الدخول. تأكد من صحة الإيميل وكلمة المرور."
 
         soup = BeautifulSoup(r.text, "html.parser")
-        
-        # استخراج الرصيد المتاح من النص العام للموقع
         for tag in soup(["script", "style"]):
             tag.decompose()
+
         page_text = soup.get_text(separator="\n")
 
         balance = "0.0"
@@ -65,37 +64,26 @@ def fetch_site_data(username, password):
                 balance = available_match_alt.group(1).replace("р.", "").strip()
 
         tasks_prices = []
-        
-        # البحث عن جدول المهام وفلترته بصرامة
         table = soup.find("table")
         if table:
             rows = table.find_all("tr")
-            for row in rows[1:]:  # تخطي سطر العناوين الرئيسي للجدول
+            for row in rows[1:]:
                 cells = row.find_all("td")
                 if len(cells) >= 3:
                     price_cell = cells[2]
-                    price_text = price_cell.get_text(strip=True)
+                    price = price_cell.get_text(strip=True)
 
-                    # 1. الحماية: تجاهل السطر تماماً إذا كان السعر يحتوي على شرطات أو نصوص روسية
-                    if not price_text or "---" in price_text or re.search(r'[а-яА-Я]', price_text):
-                        continue
+                    if price and "---" not in price:
+                        price = price.replace("руб.", "").replace("руб", "").strip()
 
-                    # تنظيف نص السعر لاستخراج الرقم فقط
-                    cleaned_price = price_text.replace("руб.", "").replace("руб", "").strip()
-                    
-                    # التأكد من أن السعر المتبقي يحتوي على أرقام (سعر حقيقي)
-                    if re.search(r'^\d+[\.,]?\d*$', cleaned_price):
-                        
-                        # 2. الحماية: فحص العمود الأخير للتأكد من وجود رابط أو زر حقيقي للتنفيذ
-                        actions_cell = cells[-1]
-                        action_link = actions_cell.find("a")
-                        
-                        # إذا كان العمود الأخير يحتوي على شرطات أو لا يحتوي على رابط تفاعلي، نتجاهله
-                        if "---" in actions_cell.get_text(strip=True) or not action_link:
-                            continue
-                        
-                        # إذا مرت المهمة من كل الفلاتر، يتم اعتمادها كمهمة حقيقية متاحة لك
-                        tasks_prices.append(cleaned_price)
+                        # خطوة الحماية المضافة: التأكد من أن السعر يحتوي على أرقام فقط وتجاهل النصوص الروسية
+                        if re.search(r'\d', price) and not re.search(r'[а-яА-Я]', price):
+                            actions_cell = cells[-1]
+                            actions_text = actions_cell.get_text(strip=True)
+                            has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
+
+                            if has_link:
+                                tasks_prices.append(price)
 
         return {"balance": balance, "tasks": tasks_prices}, "SUCCESS"
 
@@ -158,9 +146,9 @@ def handle_messages(message):
             bot.send_message(chat_id, f"💰 رصيد الروبل الحالي المتاح لديك: `{data['balance']}` روبل", parse_mode="Markdown")
 
             if total_tasks == 0:
-                bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة لك حالياً.", reply_markup=get_logged_in_menu())
+                bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة حالياً.", reply_markup=get_logged_in_menu())
             else:
-                bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة القابلة للتنفيذ:")
+                bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة:")
                 for price in data['tasks']:
                     bot.send_message(chat_id, f"🔹 توجد مهمة متاحة بسعر: {price} روبل", reply_markup=get_logged_in_menu())
         else:
@@ -189,9 +177,9 @@ def handle_messages(message):
                 bot.send_message(chat_id, f"✅ تم تسجيل الدخول بنجاح!\n💰 رصيد الروبل المتاح لديك: `{data['balance']}` روبل", parse_mode="Markdown")
 
                 if total_tasks == 0:
-                    bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة لك حالياً.", reply_markup=get_logged_in_menu())
+                    bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة حالياً.", reply_markup=get_logged_in_menu())
                 else:
-                    bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة القابلة للتنفيذ:")
+                    bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة:")
                     for price in data['tasks']:
                         bot.send_message(chat_id, f"🔹 توجد مهمة متاحة بسعر: {price} روبل", reply_markup=get_logged_in_menu())
             else:
@@ -201,7 +189,7 @@ def handle_messages(message):
         bot.send_message(chat_id, "يرجى استخدام قائمة الأزرار الظاهرة في الأسفل للتحكم بالبوت.", reply_markup=get_main_menu())
 
 # ==========================================
-# سيرفر ويب مصغر لاستقبال اتصالات التثبيت والإيقاظ
+# سيرفر ويب مطور لاستقبال اتصالات Render و UptimeRobot
 # ==========================================
 class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
