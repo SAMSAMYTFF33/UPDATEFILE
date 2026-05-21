@@ -1,5 +1,3 @@
-مشكلة كود يضهر مهمة  واحد هده ولكن هي لا توجد 
-
 
 import time
 import requests
