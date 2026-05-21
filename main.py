@@ -1,10 +1,9 @@
- 
 import time
 import requests
 from bs4 import BeautifulSoup
 import threading
 import re
-import os  # تم إضافة مكتبة os لقراءة الـ Port من Render
+import os  # لقراءة الـ Port من Render
 import telebot
 from telebot import types
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -27,6 +26,7 @@ HEADERS = {
 # ذاكرة السيرفر لتخزين الحالات المؤقتة للمستخدمين وجلساتهم
 user_sessions = {}
 user_data_store = {}
+periodic_tasks = {}  # لتخزين وإدارة مؤقتات الفحص الدوري لكل مستخدم
 
 # ==========================================
 # دالة الاتصال بالموقع وفحص البيانات بدقة
@@ -75,7 +75,6 @@ def fetch_site_data(username, password):
                     price_cell = cells[2]
                     price = price_cell.get_text(strip=True)
 
-                    # تخطي صف العداد والإحصائيات الكلية للموقع لتجنب الأخطاء في العد
                     if "Всего" in price or "найдено" in price or "Найдено" in price:
                         continue 
 
@@ -95,6 +94,39 @@ def fetch_site_data(username, password):
         return None, f"⚠️ حدث خطأ غير متوقع أثناء الاتصال بالخادم: {str(e)}"
 
 # ==========================================
+# دالة الفحص الدوري الذكي (خلفية النظام)
+# ==========================================
+def periodic_check_worker(chat_id, interval_minutes):
+    """يقوم بفحص الحساب بشكل دوري وإرسال رسالة واحدة فقط في حال وجود مهام"""
+    while True:
+        # التأكد من أن المستخدم لم يقم بإلغاء التفعيل أو تسجيل الخروج
+        if chat_id not in periodic_tasks or periodic_tasks[chat_id] != interval_minutes:
+            break
+        if chat_id not in user_data_store:
+            break
+
+        creds = user_data_store[chat_id]
+        data, status = fetch_site_data(creds['email'], creds['password'])
+
+        if status == "SUCCESS":
+            total_tasks = len(data['tasks'])
+            # يرسل إشعار فقط إذا كانت المهام أكبر من صفر
+            if total_tasks > 0:
+                notification_text = (
+                    f"🔔 *إشعار دوري للمهام:*\n\n"
+                    f"📊 تم رصد عدد ({total_tasks}) من المهام النشطة والمتاحة للعمل حالياً.\n"
+                    f"💰 رصيدك الحالي: `{data['balance']}` روبل.\n\n"
+                    f"ℹ️ يمكنك تحديث القائمة يدوياً لرؤية أسعار المهام."
+                )
+                try:
+                    bot.send_message(chat_id, notification_text, parse_mode="Markdown")
+                except Exception:
+                    pass
+        
+        # الانتظار بناءً على الوقت المحدد من قبل المستخدم
+        time.sleep(interval_minutes * 60)
+
+# ==========================================
 # تصميم قوائم الأزرار (Keyboards) بأسلوب رسمي
 # ==========================================
 def get_main_menu():
@@ -105,8 +137,23 @@ def get_main_menu():
 def get_logged_in_menu():
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     btn_refresh = types.KeyboardButton("🔄 تحديث البيانات الحالية")
+    btn_periodic = types.KeyboardButton("🔔 تفعيل وضع التنبيه الدوري")
+    btn_stop_periodic = types.KeyboardButton("🔕 إيقاف وضع التنبيه الدوري")
     btn_logout = types.KeyboardButton("🚪 إنهاء الجلسة (تسجيل الخروج)")
-    markup.add(btn_refresh, btn_logout)
+    # ترتيب الأزرار بشكل متناسق للمواقع الكبرى
+    markup.add(btn_refresh)
+    markup.add(btn_periodic, btn_stop_periodic)
+    markup.add(btn_logout)
+    return markup
+
+def get_interval_menu():
+    markup = types.ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
+    btn_5 = types.KeyboardButton("⏱️ كل 5 دقائق")
+    btn_10 = types.KeyboardButton("⏱️ كل 10 دقائق")
+    btn_30 = types.KeyboardButton("⏱️ كل 30 دقيقة")
+    btn_back = types.KeyboardButton("⬅️ العودة للقائمة الرئيسية")
+    markup.add(btn_5, btn_10, btn_30)
+    markup.add(btn_back)
     return markup
 
 # ==========================================
@@ -138,6 +185,8 @@ def handle_messages(message):
             del user_data_store[chat_id]
         if chat_id in user_sessions:
             del user_sessions[chat_id]
+        if chat_id in periodic_tasks:
+            del periodic_tasks[chat_id]
         bot.send_message(chat_id, "🔒 تم إنهاء الجلسة بنجاح، وحذف بيانات الاعتماد المؤقتة بأمان.", reply_markup=get_main_menu())
 
     elif text == "🔄 تحديث البيانات الحالية":
@@ -158,10 +207,43 @@ def handle_messages(message):
             else:
                 bot.send_message(chat_id, f"📊 تم رصد {total_tasks} من المهام النشطة:")
                 for price in data['tasks']:
-                    # تم التأكيد هنا على إرسال النص فقط دون أي روابط أو معرفات للمهمة
                     bot.send_message(chat_id, f"🔹 مهمة متاحة بقيمة: {price} روبل", reply_markup=get_logged_in_menu())
         else:
             bot.send_message(chat_id, status, reply_markup=get_logged_in_menu())
+
+    elif text == "🔔 تفعيل وضع التنبيه الدوري":
+        if chat_id not in user_data_store:
+            bot.send_message(chat_id, "⚠️ تنبيه: لم يتم العثور على جلسة نشطة. يرجى تسجيل الدخول أولاً.", reply_markup=get_main_menu())
+            return
+        
+        bot.send_message(chat_id, "⚙️ إعداد التنبيهات الدورية:\nيرجى تحديد الفترة الزمنية المطلوبة بين كل إشعار وآخر الفحص التلقائي:", reply_markup=get_interval_menu())
+
+    elif text in ["⏱️ كل 5 دقائق", "⏱️ كل 10 دقائق", "⏱️ كل 30 دقيقة"]:
+        if chat_id not in user_data_store:
+            bot.send_message(chat_id, "⚠️ تنبيه: لم يتم العثور على جلسة نشطة.", reply_markup=get_main_menu())
+            return
+        
+        # استخراج الرقم (5 أو 10 أو 30) من النص المكتوب
+        minutes = int(re.search(r'\d+', text).group())
+        
+        # حفظ الإعداد الجديد وتفعيل الخلفية للعمل
+        periodic_tasks[chat_id] = minutes
+        
+        bot.send_message(chat_id, f"✅ تم تفعيل التنبيه الدوري بنجاح.\n⏱️ الفترة الزمنية المحددة: كل {minutes} دقائق.\n\nℹ️ سيتولى النظام فحص المهام تلقائياً، وسيتم إخطارك برسالة واحدة فقط فور رصد مهام جديدة متوفرة.", reply_markup=get_logged_in_menu())
+        
+        # تشغيل الفحص في Thread مستقل حتى لا يتوقف البوت عن الاستجابة لباقي المستخدمين
+        t = threading.Thread(target=periodic_check_worker, args=(chat_id, minutes), daemon=True)
+        t.start()
+
+    elif text == "🔕 إيقاف وضع التنبيه الدوري":
+        if chat_id in periodic_tasks:
+            del periodic_tasks[chat_id]
+            bot.send_message(chat_id, "🔕 تم إيقاف وضع التنبيه الدوري بنجاح. لن تتلقى إشعارات تلقائية بعد الآن.", reply_markup=get_logged_in_menu())
+        else:
+            bot.send_message(chat_id, "ℹ️ وضع التنبيه الدوري غير مفعل مسبقاً على حسابك.", reply_markup=get_logged_in_menu())
+
+    elif text == "⬅️ العودة للقائمة الرئيسية":
+        bot.send_message(chat_id, "تمت العودة لوحة التحكم الرئيسية الخاصة بك:", reply_markup=get_logged_in_menu())
 
     elif chat_id in user_sessions:
         current_step = user_sessions[chat_id]['step']
@@ -190,7 +272,6 @@ def handle_messages(message):
                 else:
                     bot.send_message(chat_id, f"📊 تم رصد {total_tasks} من المهام النشطة:")
                     for price in data['tasks']:
-                        # يرسل السعر فقط التزاماً بطلبك بعدم عرض الروابط
                         bot.send_message(chat_id, f"🔹 مهمة متاحة بقيمة: {price} روبل", reply_markup=get_logged_in_menu())
             else:
                 del user_sessions[chat_id]
