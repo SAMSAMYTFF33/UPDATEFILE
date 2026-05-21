@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import threading
 import re
-import os  # تم إضافة مكتبة os لقراءة الـ Port من Render
+import os
 import telebot
 from telebot import types
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -23,12 +23,11 @@ HEADERS = {
     "Referer": BASE_URL
 }
 
-# ذاكرة السيرفر لتخزين الحالات المؤقتة للمستخدمين وجلساتهم
 user_sessions = {}
 user_data_store = {}
 
 # ==========================================
-# دالة الاتصال بالموقع وفحص البيانات بدقة
+# دالة الاتصال بالموقع وفحص البيانات المتاحة فعلياً
 # ==========================================
 def fetch_site_data(username, password):
     session = requests.Session()
@@ -50,9 +49,10 @@ def fetch_site_data(username, password):
             return None, "❌ فشل تسجيل الدخول. تأكد من صحة الإيميل وكلمة المرور."
 
         soup = BeautifulSoup(r.text, "html.parser")
+        
+        # استخراج الرصيد المتاح من النص العام للموقع
         for tag in soup(["script", "style"]):
             tag.decompose()
-
         page_text = soup.get_text(separator="\n")
 
         balance = "0.0"
@@ -65,24 +65,37 @@ def fetch_site_data(username, password):
                 balance = available_match_alt.group(1).replace("р.", "").strip()
 
         tasks_prices = []
+        
+        # البحث عن جدول المهام وفلترته بصرامة
         table = soup.find("table")
         if table:
             rows = table.find_all("tr")
-            for row in rows[1:]:
+            for row in rows[1:]:  # تخطي سطر العناوين الرئيسي للجدول
                 cells = row.find_all("td")
                 if len(cells) >= 3:
                     price_cell = cells[2]
-                    price = price_cell.get_text(strip=True)
+                    price_text = price_cell.get_text(strip=True)
 
-                    if price and "---" not in price:
-                        price = price.replace("руб.", "").replace("руб", "").strip()
+                    # 1. الحماية: تجاهل السطر تماماً إذا كان السعر يحتوي على شرطات أو نصوص روسية
+                    if not price_text or "---" in price_text or re.search(r'[а-яА-Я]', price_text):
+                        continue
 
+                    # تنظيف نص السعر لاستخراج الرقم فقط
+                    cleaned_price = price_text.replace("руб.", "").replace("руб", "").strip()
+                    
+                    # التأكد من أن السعر المتبقي يحتوي على أرقام (سعر حقيقي)
+                    if re.search(r'^\d+[\.,]?\d*$', cleaned_price):
+                        
+                        # 2. الحماية: فحص العمود الأخير للتأكد من وجود رابط أو زر حقيقي للتنفيذ
                         actions_cell = cells[-1]
-                        actions_text = actions_cell.get_text(strip=True)
-                        has_link = actions_cell.find("a") or ("---" not in actions_text and actions_text != "")
-
-                        if has_link:
-                            tasks_prices.append(price)
+                        action_link = actions_cell.find("a")
+                        
+                        # إذا كان العمود الأخير يحتوي على شرطات أو لا يحتوي على رابط تفاعلي، نتجاهله
+                        if "---" in actions_cell.get_text(strip=True) or not action_link:
+                            continue
+                        
+                        # إذا مرت المهمة من كل الفلاتر، يتم اعتمادها كمهمة حقيقية متاحة لك
+                        tasks_prices.append(cleaned_price)
 
         return {"balance": balance, "tasks": tasks_prices}, "SUCCESS"
 
@@ -145,9 +158,9 @@ def handle_messages(message):
             bot.send_message(chat_id, f"💰 رصيد الروبل الحالي المتاح لديك: `{data['balance']}` روبل", parse_mode="Markdown")
 
             if total_tasks == 0:
-                bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة حالياً.", reply_markup=get_logged_in_menu())
+                bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة لك حالياً.", reply_markup=get_logged_in_menu())
             else:
-                bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة:")
+                bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة القابلة للتنفيذ:")
                 for price in data['tasks']:
                     bot.send_message(chat_id, f"🔹 توجد مهمة متاحة بسعر: {price} روبل", reply_markup=get_logged_in_menu())
         else:
@@ -176,9 +189,9 @@ def handle_messages(message):
                 bot.send_message(chat_id, f"✅ تم تسجيل الدخول بنجاح!\n💰 رصيد الروبل المتاح لديك: `{data['balance']}` روبل", parse_mode="Markdown")
 
                 if total_tasks == 0:
-                    bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة حالياً.", reply_markup=get_logged_in_menu())
+                    bot.send_message(chat_id, "📋 لا توجد أي مهمة متاحة لك حالياً.", reply_markup=get_logged_in_menu())
                 else:
-                    bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة:")
+                    bot.send_message(chat_id, f"📊 تم العثور على {total_tasks} من المهام المتاحة القابلة للتنفيذ:")
                     for price in data['tasks']:
                         bot.send_message(chat_id, f"🔹 توجد مهمة متاحة بسعر: {price} روبل", reply_markup=get_logged_in_menu())
             else:
@@ -188,7 +201,7 @@ def handle_messages(message):
         bot.send_message(chat_id, "يرجى استخدام قائمة الأزرار الظاهرة في الأسفل للتحكم بالبوت.", reply_markup=get_main_menu())
 
 # ==========================================
-# سيرفر ويب مطور لاستقبال اتصالات Render و UptimeRobot
+# سيرفر ويب مصغر لاستقبال اتصالات التثبيت والإيقاظ
 # ==========================================
 class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -197,14 +210,12 @@ class WebServerHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write("البوت التفاعلي المطور أونلاين 24 ساعة!".encode("utf-8"))
 
-    # إضافة دالة do_HEAD لحل مشكلة طلبات الفحص والتنبيهات
     def do_HEAD(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
 
 def run_web_server():
-    # قراءة المنفذ من بيئة Render تلقائياً، وإذا لم يجده يستعمل 10000 كاحتياطي
     port = int(os.environ.get("PORT", 10000))
     server_address = ('', port) 
     httpd = HTTPServer(server_address, WebServerHandler)
