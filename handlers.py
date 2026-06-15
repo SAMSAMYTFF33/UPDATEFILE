@@ -2564,3 +2564,9 @@ def _handle_message_inner(message):
         else:
             bot.send_message(chat_id, "❌ رقم غير صحيح.")
 
+
+# ==========================================
+# تصدير كل الأسماء (بما فيها التي تبدأ بـ _) عند استخدام
+# from <module> import * في الملفات الأخرى
+# ==========================================
+__all__ = [_name for _name in dir() if not _name.startswith('__')]
