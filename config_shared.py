@@ -855,3 +855,9 @@ def cloud_load_user_settings(chat_id):
         pass
     return False
 
+
+# ==========================================
+# تصدير كل الأسماء (بما فيها التي تبدأ بـ _) عند استخدام
+# from <module> import * في الملفات الأخرى
+# ==========================================
+__all__ = [_name for _name in dir() if not _name.startswith('__')]
