@@ -12,6 +12,35 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime, timezone
 import concurrent.futures
 import uuid
+
+# ==========================================
+# 🔗 تحميل الملفات المرتبطة من GitHub تلقائياً
+# (يكفي رفع هذا الملف فقط على الاستضافة — وهو يجلب باقي
+#  الملفات من المستودع عند كل تشغيل)
+# ==========================================
+GITHUB_USER   = "SAMSAMYTFF33"
+GITHUB_REPO   = "UPDATEFILE"
+GITHUB_BRANCH = "main"
+_GITHUB_RAW_BASE = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{GITHUB_BRANCH}/"
+_REQUIRED_MODULES = ["config_shared.py", "proxies.py", "site_actions.py", "handlers.py"]
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def _download_dependencies():
+    for _fname in _REQUIRED_MODULES:
+        _local_path = os.path.join(_THIS_DIR, _fname)
+        try:
+            _resp = requests.get(_GITHUB_RAW_BASE + _fname, timeout=20)
+            if _resp.status_code == 200:
+                with open(_local_path, "w", encoding="utf-8") as _f:
+                    _f.write(_resp.text)
+                print(f"✅ تم تحميل {_fname} من GitHub")
+            else:
+                print(f"⚠️ فشل تحميل {_fname} (HTTP {_resp.status_code}) — سيُستخدم النسخة المحلية إن وُجدت")
+        except Exception as _e:
+            print(f"⚠️ خطأ في تحميل {_fname}: {_e} — سيُستخدم النسخة المحلية إن وُجدت")
+
+_download_dependencies()
+
 from config_shared import *
 from proxies import *
 from site_actions import *
