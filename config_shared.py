@@ -12,9 +12,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime, timezone
 import concurrent.futures
 import uuid
-from dotenv import load_dotenv
-
-load_dotenv()  # يقرأ القيم من ملف .env الموجود في نفس مجلد المشروع
+# ملاحظة: لا حاجة لـ python-dotenv هنا — القيم تأتي من os.environ
+# التي يضبطها main.py مباشرة قبل استدعاء هذا الملف.
 
 # ==========================================
 # إعداد Gemini AI لاستخراج عنوان البحث
