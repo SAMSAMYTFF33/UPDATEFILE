@@ -754,3 +754,9 @@ def build_proxy_status_text(email):
     lines.append("━━━━━━━━━━━━━━━━━━━━")
     return "\n".join(lines)
 
+
+# ==========================================
+# تصدير كل الأسماء (بما فيها التي تبدأ بـ _) عند استخدام
+# from <module> import * في الملفات الأخرى
+# ==========================================
+__all__ = [_name for _name in dir() if not _name.startswith('__')]
