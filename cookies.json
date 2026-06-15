@@ -1,0 +1,49 @@
+[
+    {
+        "name": "_cfuvid",
+        "value": "I6OYSJMOVFUZNnS7XF4CdtfPXV1CpWoz4SIeHkTfQOQ-1781531253075-0.0.1.1-604800000",
+        "domain": ".aviso.bz",
+        "hostOnly": false,
+        "path": "/",
+        "secure": true,
+        "httpOnly": true,
+        "sameSite": "no_restriction",
+        "session": true
+    },
+    {
+        "name": "cenrifugo_token",
+        "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOTc0MzMxIiwiZXhwIjoxNzgxNTQyMDUwfQ.B_D3baxo5PCGQHehiIBDJZQqlIACjNwt5xDlIfmrlrE",
+        "domain": "aviso.bz",
+        "hostOnly": true,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false
+    },
+    {
+        "name": "cenrifugo_token_exp",
+        "value": "1781542050",
+        "domain": "aviso.bz",
+        "hostOnly": true,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false
+    },
+    {
+        "name": "menu_ref",
+        "value": "a0856acf44b14c2701d3844c819a1648",
+        "domain": "aviso.bz",
+        "hostOnly": true,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false
+    },
+    {
+        "name": "PHPSESSID",
+        "value": "bedh7d0671tgeet7tamfo8bbso",
+        "domain": ".aviso.bz",
+        "hostOnly": false,
+        "path": "/",
+        "secure": true,
+        "httpOnly": true
+    }
+]
