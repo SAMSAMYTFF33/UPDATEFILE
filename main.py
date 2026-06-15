@@ -14,13 +14,28 @@ import concurrent.futures
 import uuid
 
 # ==========================================
+# 🔐 البيانات الحساسة — هذا الملف فقط (main.py) يبقى محلياً
+# على الاستضافة ولا يُرفع إلى GitHub أبداً.
+# يتم وضعها في os.environ هنا، فتقرأها config_shared.py
+# تلقائياً عبر os.getenv() بعد تحميلها من GitHub.
+# ==========================================
+os.environ["TELEGRAM_TOKEN"]        = ""
+os.environ["GEMINI_API_KEY"]        = ""
+os.environ["CAPTCHA_ALERT_CHAT_ID"] = ""
+os.environ["PROXY_USER"]            = ""
+os.environ["PROXY_PASS"]            = ""
+os.environ["SUPABASE_URL"]          = ""
+os.environ["SUPABASE_KEY"]          = ""
+# ⚠️ إذا جدّدت أي مفتاح من المفاتيح أعلاه، استبدل قيمته هنا فقط.
+
+# ==========================================
 # 🔗 تحميل الملفات المرتبطة من GitHub تلقائياً
 # (يكفي رفع هذا الملف فقط على الاستضافة — وهو يجلب باقي
 #  الملفات من المستودع عند كل تشغيل)
 # ==========================================
-GITHUB_USER   = "SAMSAMYTFF33"
-GITHUB_REPO   = "UPDATEFILE"
-GITHUB_BRANCH = "main"
+GITHUB_USER   = ""
+GITHUB_REPO   = ""
+GITHUB_BRANCH = ""
 _GITHUB_RAW_BASE = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{GITHUB_BRANCH}/"
 _REQUIRED_MODULES = ["config_shared.py", "proxies.py", "site_actions.py", "handlers.py"]
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
