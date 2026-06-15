@@ -1,4 +1,0 @@
-pyTelegramBotAPI
-requests
-beautifulsoup4
-gunicorn
