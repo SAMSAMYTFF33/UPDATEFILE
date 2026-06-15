@@ -1551,3 +1551,9 @@ def take_task_via_post(session, task_page_url):
         pass
     return False
 
+
+# ==========================================
+# تصدير كل الأسماء (بما فيها التي تبدأ بـ _) عند استخدام
+# from <module> import * في الملفات الأخرى
+# ==========================================
+__all__ = [_name for _name in dir() if not _name.startswith('__')]
