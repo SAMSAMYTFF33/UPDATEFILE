@@ -1,14 +1,90 @@
 [
     {
+        "name": "googtrans",
+        "value": "null",
+        "domain": "aviso.bz",
+        "hostOnly": true,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false,
+        "sameSite": null,
+        "session": true,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "storeId": null
+    },
+    {
+        "name": "_ga_65E9RZ06ED",
+        "value": "GS2.1.s1781531207$o3$g1$t1781532611$j41$l0$h0",
+        "domain": ".aviso.bz",
+        "hostOnly": false,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false,
+        "sameSite": null,
+        "session": false,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "expirationDate": 1816092611.659,
+        "storeId": null
+    },
+    {
+        "name": "googtrans",
+        "value": "null",
+        "domain": ".aviso.bz",
+        "hostOnly": false,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false,
+        "sameSite": null,
+        "session": true,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "storeId": null
+    },
+    {
+        "name": "_ga",
+        "value": "GA1.1.102974416.1781439078",
+        "domain": ".aviso.bz",
+        "hostOnly": false,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false,
+        "sameSite": null,
+        "session": false,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "expirationDate": 1816092592.254,
+        "storeId": null
+    },
+    {
+        "name": "mnu_title1",
+        "value": "1",
+        "domain": "aviso.bz",
+        "hostOnly": true,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false,
+        "sameSite": null,
+        "session": false,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "expirationDate": 1784124455,
+        "storeId": null
+    },
+    {
         "name": "_cfuvid",
-        "value": "I6OYSJMOVFUZNnS7XF4CdtfPXV1CpWoz4SIeHkTfQOQ-1781531253075-0.0.1.1-604800000",
+        "value": "HuY6B33pAMKLvAtu50Crrfxni2Xid8wxoD5.ubCoeHs-1781532594.6889913-1.0.1.1-p8nZmOjMT5RyG92szA57l8XEQzSABw_Dr3reE_UX_wg",
         "domain": ".aviso.bz",
         "hostOnly": false,
         "path": "/",
         "secure": true,
         "httpOnly": true,
         "sameSite": "no_restriction",
-        "session": true
+        "session": true,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "storeId": null
     },
     {
         "name": "cenrifugo_token",
@@ -17,7 +93,13 @@
         "hostOnly": true,
         "path": "/",
         "secure": false,
-        "httpOnly": false
+        "httpOnly": false,
+        "sameSite": null,
+        "session": false,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "expirationDate": 1781542050.548,
+        "storeId": null
     },
     {
         "name": "cenrifugo_token_exp",
@@ -26,7 +108,28 @@
         "hostOnly": true,
         "path": "/",
         "secure": false,
-        "httpOnly": false
+        "httpOnly": false,
+        "sameSite": null,
+        "session": false,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "expirationDate": 1781542050.548,
+        "storeId": null
+    },
+    {
+        "name": "g_state",
+        "value": "{\"i_l\":0,\"i_ll\":1781532387481,\"i_b\":\"KFMw5/2VE9ZfM/VFu4OWHGD9WDbPUZpLH2J9tlgtzuQ\",\"i_e\":{\"enable_itp_optimization\":0},\"i_et\":1781439094857}",
+        "domain": "aviso.bz",
+        "hostOnly": true,
+        "path": "/",
+        "secure": false,
+        "httpOnly": false,
+        "sameSite": null,
+        "session": false,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "expirationDate": 1797084387,
+        "storeId": null
     },
     {
         "name": "menu_ref",
@@ -35,7 +138,13 @@
         "hostOnly": true,
         "path": "/",
         "secure": false,
-        "httpOnly": false
+        "httpOnly": false,
+        "sameSite": null,
+        "session": false,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "expirationDate": 1812975087.958,
+        "storeId": null
     },
     {
         "name": "PHPSESSID",
@@ -44,6 +153,12 @@
         "hostOnly": false,
         "path": "/",
         "secure": true,
-        "httpOnly": true
+        "httpOnly": true,
+        "sameSite": "lax",
+        "session": false,
+        "firstPartyDomain": "",
+        "partitionKey": null,
+        "expirationDate": 1781612002.622,
+        "storeId": null
     }
 ]
