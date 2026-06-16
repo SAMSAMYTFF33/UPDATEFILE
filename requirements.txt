@@ -1,0 +1,4 @@
+requests
+cryptography
+beautifulsoup4
+pyTelegramBotAPI
