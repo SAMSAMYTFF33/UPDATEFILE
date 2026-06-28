@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+
+@@font-face {
+  font-family: 'Tajawal';
+  /* المسار الصحيح للملف في ذاكرة الهاتف */
+  src: url('file:///storage/emulated/0/Android/data/com.S2/files/Tajawal-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('file:///storage/emulated/0/Android/data/com.S2/files/Tajawal-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+
+
+:root {
+  /* الوضع العادي (Light Mode) - نقي وعصري */
+  --primary: #00a859; /* لون الزر الموحد */
+  --primary-color: #4a69bd;
+  --secondary-color: #079992;
+  --accent-color: #f6b93b;
+  --bg-color: #f1f2f6;
+  --card-bg: rgba(255, 255, 255, 0.65);
+  --text-dark: #2f3542;
+  --text-light: #747d8c;
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  --neon-glow: 0 0 15px rgba(74, 105, 189, 0.2);
+}
+
+.dark-mode {
+  /* الوضع الليلي (Dark Mode) - تأثير سايبر بانك / نيون / زجاجي */
+  --primary: #00ff88; /* لون الزر الموحد */
+  --primary-color: #82ccdd;
+  --secondary-color: #b8e994;
+  --accent-color: #fad390;
+  --bg-color: #0a0e17;
+  --card-bg: rgba(20, 25, 35, 0.55);
+  --text-dark: #f1f2f6;
+  --text-light: #a4b0be;
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --neon-glow: 0 0 15px rgba(184, 233, 148, 0.3), 0 0 30px rgba(130, 204, 221, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Tajawal', sans-serif;
+  background: var(--bg-color);
+  /* خلفية متدرجة تعطي عمقاً للتصميم */
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(130, 204, 221, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(184, 233, 148, 0.05) 0%, transparent 40%);
+  background-attachment: fixed;
+  color: var(--text-dark);
+  line-height: 1.8;
+  padding-bottom: 50px;
+  transition: background 0.4s ease, color 0.4s ease;
+  overflow-x: hidden;
+}
+
+/* شريط التمرير (Scrollbar) */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--secondary-color); border-radius: 10px; }
+
+/* عناصر Glassmorphism الأساسية */
+.card, .side-menu, .modal-content, .edit-popup, .confirm-popup {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* الهيدر والعناوين */
+header {
+  position: relative;
+  padding: 80px 20px 60px;
+  text-align: center;
+  background: transparent;
+  border-bottom: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(130, 204, 221, 0.08) 0%, transparent 60%);
+  z-index: -1;
+  animation: pulseBg 8s infinite alternate;
+}
+
+@keyframes pulseBg {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+h1 {
+  font-weight: 800;
+  font-size: 2.8rem;
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: var(--neon-glow);
+  margin-bottom: 15px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+.section-block {
+  margin-bottom: 60px;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 35px;
+  display: inline-block;
+  position: relative;
+}
+
+h2::after {
+  content: "";
+  position: absolute;
+  right: 0; bottom: -8px;
+  width: 50%; height: 3px;
+  background: var(--secondary-color);
+  box-shadow: 0 0 10px var(--secondary-color);
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.section-block:hover h2::after { width: 100%; }
+
+.section-intro {
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin-bottom: 30px;
+}
+
+/* نظام البطاقات المطور */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+}
+
+.card {
+  border-radius: 20px;
+  padding: 30px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; width: 4px; height: 100%;
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--glass-shadow), var(--neon-glow);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.card:hover::before { opacity: 1; }
+
+h3 {
+  font-size: 1.4rem;
+  color: var(--secondary-color);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h3::before {
+  content: "✦";
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  text-shadow: 0 0 8px var(--primary-color);
+}
+
+p {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.9;
+  text-align: justify;
+}
+
+/* القائمة الجانبية وزر القائمة */
+.menu-btn {
+    position: fixed; top: 20px; left: 20px;
+    font-size: 24px; width: 50px; height: 50px;
+    border-radius: 15px; background: var(--card-bg);
+    backdrop-filter: blur(10px); color: var(--primary); /* تم توحيد اللون هنا */
+    border: 1px solid var(--glass-border); cursor: pointer;
+    z-index: 1000; display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--glass-shadow); transition: 0.3s;
+}
+
+/* نحتفظ بالتوهج عند اللمس ولكن نزيل الدوران */
+.menu-btn:hover { box-shadow: var(--neon-glow); }
+
+/* نضيف كلاس جديد مسؤول عن الدوران فقط */
+.menu-btn.rotate-active { transform: rotate(90deg); }
+
+.side-menu {
+  position: fixed;
+  top: 0; left: -320px;
+  width: 320px; height: 100vh;
+  padding: 90px 25px 25px;
+  transition: left 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border-radius: 0 30px 30px 0;
+  z-index: 999;
+  display: flex; flex-direction: column; gap: 15px;
+}
+
+.side-menu.open { left: 0; }
+
+.side-menu button {
+  font-family: 'Tajawal', sans-serif;
+  font-size: 16px; font-weight: 700;
+  padding: 15px;
+  border-radius: 15px;
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: 0.3s;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dark);
+  position: relative;
+  overflow: hidden;
+}
+
+.side-menu button::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  transition: left 0.5s ease;
+}
+
+.side-menu button:hover::before { left: 100%; }
+.side-menu button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+.theme-btn { border-left: 4px solid var(--primary-color) !important; }
+.edit-btn { border-left: 4px solid var(--secondary-color) !important; }
+.add-btn { border-left: 4px solid var(--accent-color) !important; }
+
+/* وضع التعديل النشط (Edit Mode) */
+.edit-mode-active .edit-btn {
+  background: rgba(7, 153, 146, 0.2);
+  box-shadow: var(--neon-glow);
+}
+
+.edit-mode-active [contenteditable="true"] {
+  outline: 2px dashed var(--secondary-color);
+  outline-offset: 4px;
+  background: rgba(7, 153, 146, 0.1);
+  border-radius: 8px;
+  animation: pulseBorder 1.5s infinite;
+  padding: 2px 5px;
+}
+
+@keyframes pulseBorder {
+  0% { outline-color: var(--secondary-color); }
+  50% { outline-color: transparent; }
+  100% { outline-color: var(--secondary-color); }
+}
+
+/* النوافذ المنبثقة للـ Edit & Delete */
+.edit-popup, .confirm-popup {
+  position: fixed;
+  display: flex; gap: 10px;
+  border-radius: 50px;
+  padding: 8px 15px;
+  z-index: 2000;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.edit-popup.show, .confirm-popup.show {
+  pointer-events: all;
+  opacity: 1;
+  transform: translate(-50%, -120%);
+}
+
+.edit-popup button, .confirm-popup button {
+  width: 42px; height: 42px;
+  border-radius: 50%; border: none;
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: 0.2s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.edit-popup button:hover, .confirm-popup button:hover { transform: scale(1.1); }
+
+.delete-btn { background: #ff4757; color: white; }
+.edit-btn-popup { background: var(--secondary-color); color: white; }
+.cancel-btn-popup { background: #747d8c; color: white; }
+.confirm-edit-btn { background: #2ed573; color: white; }
+.cancel-edit-btn { background: #ff4757; color: white; }
+
+/* نوافذ الإضافة والحذف (Modals) */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 3000; opacity: 0; pointer-events: none; transition: 0.3s;
+}
+
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+
+.modal-content {
+  width: 90%; max-width: 500px;
+  border-radius: 25px;
+  padding: 30px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+}
+
+.modal-content h3 { justify-content: center; font-size: 1.6rem; color: var(--primary-color); }
+
+.input-group { margin-bottom: 20px; }
+.input-group label {
+  display: block; margin-bottom: 8px;
+  color: var(--text-dark); font-weight: 700;
+}
+
+.input-group input, .input-group textarea {
+  width: 100%; padding: 15px;
+  border-radius: 15px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--text-dark);
+  font-family: 'Tajawal', sans-serif; font-size: 1rem;
+  resize: vertical; transition: 0.3s;
+}
+
+.input-group input:focus, .input-group textarea:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 15px rgba(184, 233, 148, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.modal-buttons { display: flex; gap: 15px; margin-top: 30px; }
+.modal-buttons button {
+  flex: 1; padding: 15px; border-radius: 15px; border: none;
+  font-size: 1rem; font-weight: 700; font-family: 'Tajawal', sans-serif;
+  cursor: pointer; transition: 0.3s;
+}
+
+.modal-buttons button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.modal-buttons button:first-child { background: var(--secondary-color); color: #000; }
+.modal-buttons button:last-child { background: transparent; color: var(--text-light); border: 1px solid var(--text-light); }
+
+.note { font-size: 0.85rem; color: var(--text-light); margin-top: 15px; text-align: center; }
+
+/* التنبيهات (Toast) */
+.edit-toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: rgba(10, 14, 23, 0.9);
+  backdrop-filter: blur(10px);
+  color: var(--text-dark);
+  padding: 12px 25px;
+  border-radius: 50px;
+  font-size: 14px; font-weight: 700;
+  border: 1px solid var(--secondary-color);
+  box-shadow: var(--neon-glow);
+  z-index: 2000; opacity: 0; transition: 0.3s; pointer-events: none;
+  transform: translateY(20px);
+}
+
+.edit-toast.show { opacity: 1; transform: translateY(0); }
+
+/* التجاوب مع الشاشات (Responsive) */
+@media (max-width: 768px) {
+  h1 { font-size: 2.2rem; }
+  h2 { font-size: 1.5rem; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .side-menu { width: 280px; left: -280px; }
+  .modal-content { width: 95%; padding: 20px; }
+  .edit-popup button, .confirm-popup button { width: 38px; height: 38px; font-size: 16px; }
+}
+
+</style>
+ </head>
+ <body class="dark-mode edit-mode-active">
+  <script>
+(function() {
+try {
+const savedTheme = localStorage.getItem('s2-theme');
+if (savedTheme === 'light') {
+document.body.classList.remove('dark-mode');
+} else {
+document.body.classList.add('dark-mode');
+}
+} catch(e) {}
+})();
+</script>
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
+  <div class="side-menu" id="menu"> <button class="edit-btn" onclick="toggleEditMode()"><span>✓</span> إنهاء التعديل</button> <button class="add-btn" onclick="openAddModal()"> <span> </span> إضافة نص </button>
+  </div>
+  <header>
+   
+  <h1 id="h1_0">.... edit&nbsp;&nbsp;</h1></header>
+  <div class="container" id="mainContainer">
+   <section class="section-block">
+    
+   </section>
+   
+ <!-- نافذة إضافة نص -->
+  <div class="modal-overlay" id="addModal">
+   <div class="modal-content">
+    <h3 id="h3_2"> إضافة نص </h3>
+    <div class="input-group"><label>العنوان صفحة  - اختياري</label> <input type="text" id="inputH1" placeholder="...">
+    </div>
+    <div class="input-group"><label>النص التمهيدي  - اختياري</label> <textarea id="inputIntro" rows="3" placeholder="..."></textarea>
+    </div>
+    <div class="input-group"><label>العنوان الرئيسي  - اختياري</label> <input type="text" id="inputH2" placeholder="...">
+    </div>
+    <div class="input-group"><label>العنوان الفرعي مع نص - اختياري</label> <input type="text" id="inputCardTitle" placeholder="العنوان الفرعي..."> <textarea id="inputCardText" rows="2" placeholder="النص داخل العنوان الفرعي ..." style="margin-top:10px;"></textarea>
+    </div>
+    <div class="modal-buttons"><button onclick="addNewContent()">✅ إضافة</button> <button onclick="closeAddModal()">❌ إلغاء</button>
+    </div>
+    <div class="note">
+     يمكنك تعبئة حقل واحد أو أكثر - الحقول الفارغة لن تُضاف
+    </div>
+   </div>
+  </div> <!-- نافذة تأكيد الحذف -->
+  <div class="modal-overlay" id="deleteConfirmModal">
+   <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <h3 style="color: var(--primary-color); margin-bottom: 20px;" id="h3_3">⚠️ تأكيد الحذف</h3>
+    <p style="margin-bottom: 30px; font-size: 1.1rem;" id="p_1">هل أنت متأكد من حذف هذا العنصر؟</p>
+    <div class="modal-buttons"><button onclick="confirmDeleteElement()" style="background: #dc3545; color: white;">🗑️ تأكيد الحذف</button> <button onclick="cancelDeleteModal()" style="background: var(--secondary-color); color: white;">❌ إلغاء</button>
+    </div>
+   </div>
+  </div> <!-- أزرار التعديل والحذف والإلغاء فوق النص -->
+  <div class="edit-popup" id="editPopup" style=""><button class="delete-btn" onclick="deleteElement()">🗑️</button> <button class="edit-btn-popup" onclick="prepareEdit()">✎</button> <button class="cancel-btn-popup" onclick="cancelPopup()">✖</button>
+  </div> <!-- أزرار التأكيد والإلغاء أثناء التعديل -->
+  <div class="confirm-popup" id="confirmPopup" style="left: 175.254px; top: 60px;"><button class="confirm-edit-btn" onclick="confirmEdit()">✅</button> <button class="cancel-edit-btn" onclick="cancelEdit()">❌</button>
+</div>
+
+  <div class="edit-toast" id="editToast">وضع التعديل نشط - اضغط مطولاً لاختيار نص</div>
+  <script>
+let editMode = false;
+let currentEditElement = null;
+let originalText = '';
+let longPressTimer = null;
+let longPressedElement = null;
+let elementToDelete = null;
+
+// ⭐ دالة إضافة أرقام فريدة لكل العناصر
+function giveUniqueIds() {
+    // الفقرات العادية
+    document.querySelectorAll('p:not(.card p)').forEach((el, index) => {
+        if (!el.id) el.id = 'p_' + index;
+    });
+    
+    // الفقرات داخل البطاقات
+    document.querySelectorAll('.card p').forEach((el, index) => {
+        if (!el.id) el.id = 'card_p_' + index;
+    });
+    
+    // العناوين الرئيسية
+    document.querySelectorAll('h1').forEach((el, index) => {
+        if (!el.id) el.id = 'h1_' + index;
+    });
+    
+    // العناوين الثانوية
+    document.querySelectorAll('h2').forEach((el, index) => {
+        if (!el.id) el.id = 'h2_' + index;
+    });
+    
+    // العناوين الفرعية
+    document.querySelectorAll('h3').forEach((el, index) => {
+        if (!el.id) el.id = 'h3_' + index;
+    });
+    
+    // النص التمهيدي
+    document.querySelectorAll('.section-intro').forEach((el, index) => {
+        if (!el.id) el.id = 'intro_' + index;
+    });
+}
+
+// استرجاع حالة الوضع الافتراضي  عند تحميل الصفحة
+function loadThemePreference() {
+    const savedTheme = localStorage.getItem('s2-theme');
+    if (savedTheme === 'light') {
+        document.body.classList.remove('dark-mode');
+    } else {
+        document.body.classList.add('dark-mode');
+    }
+}
+
+
+// استرجاع حالة وضع التعديل
+// استرجاع حالة وضع التعديل
+function loadEditModePreference() {
+    const savedEditMode = localStorage.getItem('editMode');
+    
+    if (savedEditMode === 'enabled') {
+        editMode = true;
+        document.body.classList.add('edit-mode-active');
+        document.querySelector('.edit-btn').innerHTML = '<span>✓</span> إنهاء التعديل';
+        
+        // لا نضيف contenteditable تلقائياً، فقط نفعّل وضع التحديد
+    } else {
+        editMode = false;
+        document.body.classList.remove('edit-mode-active');
+        document.querySelector('.edit-btn').innerHTML = '<span></span> تعديل النص ';
+        
+        // التأكد من إزالة خاصية التعديل من جميع العناصر
+        document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.removeAttribute('contenteditable');
+        });
+    }
+}
+
+window.addEventListener('load', function() {
+loadThemePreference();  // تأكد من وجود هذا السطر
+loadEditModePreference();
+hideEditPopup();
+hideConfirmPopup();
+currentEditElement = null;
+giveUniqueIds();
+});
+
+// دالة لتسجيل التعديلات في ملف JSON
+// دالة لتسجيل التعديلات في ملف JSON (محسنة للحفاظ على جميع التعديلات)
+function recordEdit(editData) {
+    // ⭐ إضافة ID العنصر للتعديل
+    if (currentEditElement && currentEditElement.id) {
+        editData.element_id = currentEditElement.id;
+    }
+    
+    // اسم الملف الحالي
+    const currentFile = 'M4F1.html';
+    const editsFile = '/storage/emulated/0/Android/data/com.S2/files/edits.json';
+    
+    // هيكل البيانات الأساسي
+    let edits = {};
+    
+    try {
+        // محاولة قراءة الملف الموجود
+        if (typeof AndroidBridge !== 'undefined' && AndroidBridge.readFile) {
+            const existingContent = AndroidBridge.readFile(editsFile);
+            if (existingContent && existingContent.trim() !== '') {
+                try {
+                    const parsed = JSON.parse(existingContent);
+                    if (parsed && typeof parsed === 'object') {
+                        edits = parsed;
+                    }
+                } catch(e) {
+                    console.log('خطأ في قراءة الملف، سيتم إنشاء ملف جديد');
+                }
+            }
+        }
+    } catch (error) {
+        console.log('خطأ في الوصول للملف');
+    }
+    
+    // التأكد من وجود هيكل البيانات الصحيح
+    if (!edits[currentFile]) {
+        edits[currentFile] = { edits: [] };
+    }
+    if (!edits[currentFile].edits) {
+        edits[currentFile].edits = [];
+    }
+    
+    // إضافة معرف فريد للتعديل
+    editData.id = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    editData.timestamp = Date.now();
+    
+    // إضافة التعديل الجديد إلى المصفوفة (وليس استبدالها)
+    edits[currentFile].edits.push(editData);
+    
+    // حفظ الملف
+    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.saveFile) {
+        const jsonString = JSON.stringify(edits, null, 2);
+        AndroidBridge.saveFile(editsFile, jsonString);
+        console.log('تم تسجيل التعديل بنجاح');
+    }
+}
+
+function toggleMenu(){
+document.getElementById("menu").classList.toggle("open");
+document.querySelector('.menu-btn').classList.toggle("rotate-active");
+}
+
+
+
+// تشغيل وإيقاف وضع التعديل
+function toggleEditMode() {
+    editMode = !editMode;
+    const editBtn = document.querySelector('.edit-btn');
+    const body = document.body;
+
+    if (editMode) {
+        body.classList.add('edit-mode-active');
+        editBtn.innerHTML = '<span>✓</span> إنهاء التعديل';
+        localStorage.setItem('editMode', 'enabled');
+        
+        // لا نضيف contenteditable تلقائياً هنا أيضاً
+        showToast('وضع التعديل نشط - اضغط مطولاً لاختيار نص');
+    } else {
+        body.classList.remove('edit-mode-active');
+        editBtn.innerHTML = '<span></span> تعديل النص ';
+        localStorage.setItem('editMode', 'disabled');
+        
+        // إزالة خاصية التعديل من أي عنصر كان في وضع التعديل
+        document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.removeAttribute('contenteditable');
+        });
+
+        if (currentEditElement) {
+            currentEditElement = null;
+        }
+        hideEditPopup();
+        hideConfirmPopup();
+    }
+}
+// دوال نافذة الإضافة
+function openAddModal() {
+document.getElementById('addModal').classList.add('show');
+document.getElementById('menu').classList.remove('open');
+}
+
+function closeAddModal() {
+document.getElementById('addModal').classList.remove('show');
+document.getElementById('inputH1').value = '';
+document.getElementById('inputIntro').value = '';
+document.getElementById('inputH2').value = '';
+document.getElementById('inputCardTitle').value = '';
+document.getElementById('inputCardText').value = '';
+}
+
+function addNewContent() {
+    const h1Text = document.getElementById('inputH1').value.trim();
+    const introText = document.getElementById('inputIntro').value.trim();
+    const h2Text = document.getElementById('inputH2').value.trim();
+    const cardTitle = document.getElementById('inputCardTitle').value.trim();
+    const cardText = document.getElementById('inputCardText').value.trim();
+
+    const container = document.getElementById('mainContainer');
+
+    if (h1Text !== '') {
+        const header = document.querySelector('header');
+        if (header) {
+            const newH1 = document.createElement('h1');
+            newH1.textContent = h1Text;
+            header.appendChild(newH1);
+            
+            recordEdit({ type: "add", timestamp: Date.now(), position: { relation: "append", target: "header" }, html: `<h1>${h1Text}</h1>` });
+        }
+    }
+
+    if (h2Text !== '' || introText !== '' || cardTitle !== '' || cardText !== '') {
+        const newSection = document.createElement('section');
+        newSection.className = 'section-block';
+
+        if (h2Text !== '') {
+            const h2 = document.createElement('h2');
+            h2.textContent = h2Text;
+            newSection.appendChild(h2);
+        }
+
+        if (introText !== '') {
+            const intro = document.createElement('p');
+            intro.className = 'section-intro';
+            intro.textContent = introText;
+            newSection.appendChild(intro);
+        }
+
+        if (cardTitle !== '' || cardText !== '') {
+            const cardsGrid = document.createElement('div');
+            cardsGrid.className = 'cards-grid';
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            if (cardTitle !== '') {
+                const cardH3 = document.createElement('h3');
+                cardH3.textContent = cardTitle;
+                card.appendChild(cardH3);
+            }
+
+            if (cardText !== '') {
+                const cardP = document.createElement('p');
+                cardP.textContent = cardText;
+                card.appendChild(cardP);
+            }
+
+            cardsGrid.appendChild(card);
+            newSection.appendChild(cardsGrid);
+        }
+
+        container.appendChild(newSection);
+        
+        recordEdit({
+            type: "add",
+            timestamp: Date.now(),
+            position: { relation: "append", target: "#mainContainer" },
+            html: newSection.outerHTML
+        });
+    }
+
+    giveUniqueIds(); 
+    closeAddModal();
+    saveChanges();
+    showToast('✅ تمت الإضافة بنجاح');
+}
+
+
+function saveChanges() {
+    // إخفاء العناصر المنبثقة يدوياً قبل الحفظ لضمان عدم تسجيلها في ملف HTML
+    document.getElementById('editPopup').classList.remove('show');
+    document.getElementById('confirmPopup').classList.remove('show');
+    document.getElementById('addModal').classList.remove('show');
+    document.getElementById('deleteConfirmModal').classList.remove('show');
+    
+    // إزالة خاصية التعديل من أي عنصر نشط قبل الحفظ
+    document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+        el.removeAttribute('contenteditable');
+    });
+
+    const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.saveFile) {
+        AndroidBridge.saveFile('/storage/emulated/0/Android/data/com.S2/files/M4F1.html', htmlContent);
+    }
+}
+
+
+function handleTouchStart(e) {
+    if (!editMode) return;
+
+    // تجاهل النقر إذا كان على القوائم أو الأزرار أو النوافذ المنبثقة
+    if (e.target.closest('.edit-popup, .confirm-popup, .menu-btn, .side-menu, .modal-overlay, .modal-content') || e.target.hasAttribute('contenteditable')) {
+        return; 
+    }
+
+    const element = e.target.closest('h1, h2, h3, p, .section-intro, .card p');
+    if (!element) return;
+
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+    }
+
+    currentEditElement = element;
+    originalText = currentEditElement.innerText;
+
+    const popup = document.getElementById('editPopup');
+    const touch = e.touches[0];
+    popup.style.left = touch.clientX + 'px';
+    popup.style.top = (touch.clientY - 70) + 'px';
+    popup.classList.add('show');
+
+    hideConfirmPopup();
+}
+
+
+function handleTouchEnd(e) {
+if (longPressTimer) {
+clearTimeout(longPressTimer);
+longPressTimer = null;
+}
+}
+
+function handleTouchCancel(e) {
+if (longPressTimer) {
+clearTimeout(longPressTimer);
+longPressTimer = null;
+}
+}
+
+function deleteElement() {
+if (currentEditElement) {
+elementToDelete = currentEditElement;
+hideEditPopup();
+document.getElementById('deleteConfirmModal').classList.add('show');
+}
+}
+
+
+
+function confirmDeleteElement() {
+    if (elementToDelete) {
+        
+        // 🧹 إجبار الشاشة على إخفاء أزرار ✅ و ❌ قبل الحذف والحفظ
+        try {
+            if (typeof cancelEdit === 'function') cancelEdit();
+        } catch(e) {}
+        
+        // إخفاء الأزرار العائمة يدوياً لضمان عدم حفظها في الكود
+        document.querySelectorAll('.action-buttons, #actionButtons, #editButtons, .edit-buttons').forEach(el => {
+            el.style.display = 'none';
+            el.classList.remove('show');
+        });
+        
+        // إزالة خاصية التعديل من أي نص نشط
+        document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.removeAttribute('contenteditable');
+        });
+
+        const card = elementToDelete.closest('.card');
+        const section = elementToDelete.closest('.section-block');
+        
+        if (card) {
+            // الحالة 1: إذا كان العنصر هو العنوان (H3 أو H2) - نحذف البطاقة كاملة كما في كودك
+            if (elementToDelete.tagName === 'H3' || elementToDelete.tagName === 'H2') {
+                const cardsGrid = card.closest('.cards-grid');
+                const targetId = elementToDelete.id;
+
+                recordEdit({
+                    type: "delete",
+                    timestamp: Date.now(),
+                    selector: { type: "css", value: `.card:has(#${targetId})` },
+                    deleted_content: card.outerHTML
+                });
+
+                card.remove(); 
+                
+                if (cardsGrid && cardsGrid.children.length === 0) {
+                    cardsGrid.remove();
+                }
+            } 
+            // الحالة 2: إذا كان العنصر هو النص (P)
+            else if (elementToDelete.tagName === 'P') {
+                recordEdit({
+                    type: "delete",
+                    timestamp: Date.now(),
+                    selector: { type: "css", value: `#${elementToDelete.id}` },
+                    deleted_content: elementToDelete.outerHTML
+                });
+                
+                elementToDelete.remove();
+
+                // 🛠️ [تعديل] إذا بقى الإطار (البطاقة) فارغاً بعد حذف النص P، نحذف الإطار تماماً
+                if (card.children.length === 0 || (card.children.length === 1 && card.querySelectorAll('h3, h2, p').length === 0)) {
+                    const cardsGrid = card.closest('.cards-grid');
+                    card.remove();
+                    if (cardsGrid && cardsGrid.children.length === 0) {
+                        cardsGrid.remove();
+                    }
+                }
+            }
+        } 
+        else {
+            // حذف العناصر التي ليست داخل بطاقة (مثل العناوين الرئيسية)
+            recordEdit({
+                type: "delete",
+                timestamp: Date.now(),
+                selector: { type: "css", value: `#${elementToDelete.id}` },
+                deleted_content: elementToDelete.outerHTML
+            });
+            
+            elementToDelete.remove();
+        }
+
+        // 🛠️ [تعديل] إذا أصبح القسم (Section) فارغاً تماماً، نحذفه لضمان نظافة الصفحة
+        if (section && section.querySelectorAll('h1, h2, h3, p').length === 0) {
+            section.remove();
+        }
+
+        closeDeleteModal();
+        saveChanges();
+        showToast('🗑️ تم الحذف بنجاح');
+
+        elementToDelete = null;
+        currentEditElement = null;
+    }
+}
+
+
+function cancelDeleteModal() {
+closeDeleteModal();
+saveChanges();
+elementToDelete = null;
+showToast('✖️ تم إلغاء الحذف');
+}
+
+function closeDeleteModal() {
+document.getElementById('deleteConfirmModal').classList.remove('show');
+}
+
+function prepareEdit() {
+if (currentEditElement) {
+// ⭐ إضافة ID فريد إذا لم يكن موجوداً
+if (!currentEditElement.id) {
+// نعطي ID حسب نوع العنصر
+const tagName = currentEditElement.tagName.toLowerCase();
+if (tagName === 'p') {
+if (currentEditElement.closest('.card')) {
+// إذا كانت فقرة داخل بطاقة
+const cardPCount = document.querySelectorAll('.card p').length;
+currentEditElement.id = 'card_p_' + cardPCount;
+} else {
+// فقرة عادية
+const pCount = document.querySelectorAll('p:not(.card p)').length;
+currentEditElement.id = 'p_' + pCount;
+}
+} else if (tagName === 'h1') {
+const h1Count = document.querySelectorAll('h1').length;
+currentEditElement.id = 'h1_' + h1Count;
+} else if (tagName === 'h2') {
+const h2Count = document.querySelectorAll('h2').length;
+currentEditElement.id = 'h2_' + h2Count;
+} else if (tagName === 'h3') {
+const h3Count = document.querySelectorAll('h3').length;
+currentEditElement.id = 'h3_' + h3Count;
+} else if (currentEditElement.classList.contains('section-intro')) {
+const introCount = document.querySelectorAll('.section-intro').length;
+currentEditElement.id = 'intro_' + introCount;
+} else {
+// لو أي عنصر آخر
+currentEditElement.id = 'el_' + Date.now();
+}
+}
+
+currentEditElement.setAttribute('contenteditable', 'true');
+currentEditElement.focus();
+
+const range = document.createRange();
+const sel = window.getSelection();
+
+if (currentEditElement.childNodes.length > 0) {
+const lastNode = currentEditElement.childNodes[currentEditElement.childNodes.length - 1];
+range.setStartAfter(lastNode);
+} else {
+range.selectNodeContents(currentEditElement);
+}
+
+range.collapse(false);
+sel.removeAllRanges();
+sel.addRange(range);
+
+hideEditPopup();
+
+const confirmPopup = document.getElementById('confirmPopup');
+const rect = currentEditElement.getBoundingClientRect();
+confirmPopup.style.left = (rect.left + rect.width / 2) + 'px';
+confirmPopup.style.top = (rect.top - 20) + 'px';
+confirmPopup.classList.add('show');
+
+currentEditElement.addEventListener('touchstart', function(e) {
+e.stopPropagation();
+}, {passive: true});
+}
+}
+
+function confirmEdit() {
+if (currentEditElement) {
+const newText = currentEditElement.innerText;
+const oldText = originalText;
+
+if (newText !== oldText) {
+let selector = '';
+if (currentEditElement.tagName === 'H1') selector = 'header h1';
+else if (currentEditElement.tagName === 'H2') selector = 'h2';
+else if (currentEditElement.tagName === 'H3') selector = 'h3';
+else if (currentEditElement.classList.contains('section-intro')) selector = '.section-intro';
+else if (currentEditElement.tagName === 'P') {
+if (currentEditElement.closest('.card')) {
+selector = '.card p';
+} else {
+selector = 'p';
+}
+}
+
+recordEdit({
+type: "modify",
+timestamp: Date.now(),
+selector: {
+type: "css",
+value: selector
+},
+old_content: oldText,
+new_content: newText
+});
+
+saveChanges();
+showToast('✅ تم الحفظ');
+}
+
+currentEditElement.removeAttribute('contenteditable');
+hideConfirmPopup();
+currentEditElement = null;
+}
+}
+
+function cancelEdit() {
+if (currentEditElement) {
+currentEditElement.innerText = originalText;
+currentEditElement.removeAttribute('contenteditable');
+hideConfirmPopup();
+showToast('❌ تم الإلغاء');
+currentEditElement = null;
+}
+}
+
+function cancelPopup() {
+hideEditPopup();
+currentEditElement = null;
+showToast('✖️ تم الإلغاء');
+}
+
+function hideEditPopup() {
+document.getElementById('editPopup').classList.remove('show');
+document.getElementById('editPopup').removeAttribute('style');
+}
+
+function hideConfirmPopup() {
+document.getElementById('confirmPopup').classList.remove('show');
+document.getElementById('confirmPopup').removeAttribute('style');
+}
+
+function showToast(message) {
+const toast = document.getElementById('editToast');
+toast.textContent = message;
+toast.classList.add('show');
+
+setTimeout(() => {
+toast.classList.remove('show');
+}, 1500);
+}
+
+// إضافة مستمعي الأحداث لجميع العناصر (القديمة والجديدة)
+document.addEventListener('touchstart', handleTouchStart, {passive: false});
+document.addEventListener('touchend', handleTouchEnd);
+document.addEventListener('touchcancel', handleTouchCancel);
+
+document.addEventListener('contextmenu', (e) => {
+if (editMode) e.preventDefault();
+});
+
+document.addEventListener('touchmove', (e) => {
+if (currentEditElement && currentEditElement.hasAttribute('contenteditable')) {
+// لا نستخدم preventDefault
+}
+}, {passive: true});
+
+// إخفاء البوب أب عند النقر خارجها
+document.addEventListener('touchstart', function(e) {
+const confirmPopup = document.getElementById('confirmPopup');
+
+if (confirmPopup.classList.contains('show') && !e.target.closest('.confirm-popup') && !e.target.closest('[contenteditable="true"]')) {
+if (currentEditElement && currentEditElement.hasAttribute('contenteditable')) {
+cancelEdit();
+}
+}
+});
+
+window.addEventListener('beforeunload', function() {
+if (editMode) {
+toggleEditMode();
+}
+});
+
+window.addEventListener('pagehide', function() {
+if (editMode) {
+toggleEditMode();
+}
+});
+</script>
+ 
+
+
+</div></body></html>
