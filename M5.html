@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الفصول</title>
+    <!-- إضافة خط Tajawal و Font Awesome لنفس الجمالية -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet"> -->
+    <!-- تم تعديل طريقة تحميل الخط لتعمل مع الملفات المحلية كما كانت -->
+    <style>
+        @font-face {
+            font-family: 'Tajawal';
+            src: url('file:///storage/emulated/0/Android/data/com.S2/files/Tajawal-Regular.ttf') format('truetype');
+            font-weight: 400;
+        }
+
+        @font-face {
+            font-family: 'Tajawal';
+            src: url('file:///storage/emulated/0/Android/data/com.S2/files/Tajawal-Bold.ttf') format('truetype');
+            font-weight: 700;
+        }
+
+        :root {
+    /* ألوان الوضع الفاتح */
+    --primary: #00a859; /* درجة أخضر أغمق قليلاً لتكون واضحة على الخلفية الفاتحة */
+    --secondary: #008cb3;
+    --bg-dark: #f4f6f9; /* خلفية بيضاء/رمادية فاتحة */
+    --card-bg: rgba(0, 0, 0, 0.05); /* خلفية العناصر تصبح داكنة بشفافية */
+    --glass-border: rgba(0, 0, 0, 0.1); /* حواف داكنة بشفافية */
+    --text-dark: #1a1a1a; /* نص داكن جداً ليظهر على الخلفية الفاتحة */
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    --neon-glow: 0 0 15px rgba(0, 168, 89, 0.2);
+}
+
+
+        /* تم تعديل الـ dark-mode ليتوافق مع الألوان الجديدة */
+        .dark-mode {
+            --primary: #00ff88;
+            --secondary: #00bdff;
+            --bg-dark: #050a0a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-dark: #fff;
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --neon-glow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            margin: 0; padding: 60px 0; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            /* --- التعديل هنا: خلفية داكنة مع تدرجات مشعة --- */
+            background: var(--bg-dark);
+            color: var(--text-dark);
+            transition: background 0.4s ease, color 0.4s ease;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 255, 136, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 189, 255, 0.15) 0px, transparent 50%);
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* --- التعديل هنا: الحاوية أصبحت بعرض كامل (كما في الكود الأول) --- */
+        .container {
+            width: 100%;
+            max-width: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1px; /* فجوة بسيطة جداً كخط فاصل */
+            z-index: 10;
+            padding-bottom: 50px;
+        }
+
+        /* --- التعديل هنا: الأزرار أصبحت على شكل مستطيلات كاملة بدون حواف دائرية --- */
+        .neon-btn {
+            position: relative;
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start; /* لمحاذاة النص لليسار (في RTL) */
+            gap: 15px;
+            padding: 20px 25px;
+            text-decoration: none; 
+            font-size: 16px; 
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: var(--card-bg);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-drag: none;
+            text-align: right; /* لمحاذاة النص */
+        }
+
+        .neon-btn i { 
+            font-size: 20px; 
+            color: var(--primary); 
+            transition: 0.3s; 
+        }
+
+        .neon-btn:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .neon-btn:hover {
+            /* يمكن إضافة تأثيرات إضافية إذا أردت */
+        }
+
+        /* باقي الأنماط الخاصة بالقائمة والوظائف تم الاحتفاظ بها كما هي مع تعديلات طفيفة في الألوان */
+
+        .menu-btn {
+            position: fixed; top: 20px; left: 20px;
+            font-size: 24px; width: 50px; height: 50px;
+            border-radius: 15px; background: var(--card-bg);
+            backdrop-filter: blur(10px); color: var(--primary);
+            border: 1px solid var(--glass-border); cursor: pointer;
+            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--glass-shadow); transition: 0.3s;
+        }
+
+        /* نحتفظ بالتوهج عند اللمس ولكن نزيل الدوران */
+.menu-btn:hover { box-shadow: var(--neon-glow); }
+
+/* نضيف كلاس جديد مسؤول عن الدوران فقط */
+.menu-btn.rotate-active { transform: rotate(90deg); }
+
+        .side-menu {
+            position: fixed; top: 0; left: -320px;
+            width: 320px; height: 100vh; padding: 90px 25px 25px;
+            transition: left 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-radius: 0 30px 30px 0; z-index: 999;
+            display: flex; flex-direction: column; gap: 15px;
+            background: var(--card-bg); backdrop-filter: blur(16px);
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .side-menu.open { left: 0; }
+
+        .side-menu button {
+            font-family: 'Tajawal', sans-serif; font-size: 16px; font-weight: 700;
+            padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border);
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.3s; background: rgba(255, 255, 255, 0.05); color: var(--text-dark);
+        }
+
+        .side-menu button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .theme-btn { border-left: 4px solid var(--primary) !important; }
+        .edit-btn { border-left: 4px solid var(--secondary) !important; }
+        .add-btn { border-left: 4px solid var(--primary) !important; } /* تم التعديل هنا */
+
+        .edit-mode-active .edit-btn { background: rgba(0, 255, 255, 0.2); box-shadow: var(--neon-glow); }
+        .edit-mode-active [contenteditable="true"] {
+            outline: 2px dashed var(--secondary);
+            outline-offset: 4px; animation: pulseBorder 1.5s infinite; cursor: text;
+        }
+
+        @keyframes pulseBorder {
+            0% { outline-color: var(--secondary); }
+            50% { outline-color: transparent; }
+            100% { outline-color: var(--secondary); }
+        }
+
+        .edit-popup, .confirm-popup {
+            position: fixed; display: flex; gap: 10px;
+            border-radius: 50px; padding: 8px 15px; z-index: 2000;
+            transform: translate(-50%, -100%); pointer-events: none; opacity: 0;
+            transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--card-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .edit-popup.show, .confirm-popup.show { pointer-events: all; opacity: 1; transform: translate(-50%, -120%); }
+
+        .edit-popup button, .confirm-popup button {
+            width: 42px; height: 42px; border-radius: 50%; border: none;
+            font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .edit-popup button:hover, .confirm-popup button:hover { transform: scale(1.1); }
+        .delete-btn { background: #ff4757; color: white; }
+        .edit-btn-popup { background: var(--secondary); color: #000; }
+        .cancel-btn-popup { background: #747d8c; color: white; }
+        .confirm-edit-btn { background: #2ed573; color: white; }
+        .cancel-edit-btn { background: #ff4757; color: white; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 3000; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+
+        .modal-content {
+            width: 90%; max-width: 450px; border-radius: 25px; padding: 30px;
+            background: var(--card-bg); border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); text-align: center;
+        }
+
+        .modal-content h3 { font-size: 1.6rem; color: var(--secondary); margin-bottom: 20px; }
+
+        .input-group input {
+            width: 100%; padding: 15px; border-radius: 15px;
+            border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.2);
+            color: var(--text-dark); font-family: 'Tajawal', sans-serif; font-size: 1.1rem;
+            text-align: center; transition: 0.3s;
+        }
+
+        .input-group input:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
+
+        .modal-buttons { display: flex; gap: 15px; margin-top: 30px; }
+        .modal-buttons button {
+            flex: 1; padding: 15px; border-radius: 15px; border: none;
+            font-size: 1.1rem; font-weight: 700; font-family: 'Tajawal', sans-serif;
+            cursor: pointer; transition: 0.3s;
+        }
+        .modal-buttons button:hover { transform: translateY(-3px); }
+
+        .edit-toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--bg-dark); backdrop-filter: blur(15px); color: var(--text-dark);
+            padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 600;
+            border: 1px solid var(--glass-border); border-right: 4px solid var(--primary);
+            box-shadow: var(--glass-shadow); z-index: 4000; opacity: 0; 
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none; display: flex; align-items: center; gap: 12px;
+        }
+        .edit-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .edit-toast i { color: var(--primary); font-size: 18px; }
+        .edit-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body class="dark-mode edit-mode-active">
+
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+    <div class="side-menu" id="menu">
+                <button class="edit-btn" onclick="toggleEditMode()"><span>✓</span> إنهاء التعديل</button>
+        <button class="add-btn" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> إضافة فصل جديد</button>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <!-- تم تعديل الأزرار لتشمل الأيقونات من Font Awesome كتطبيق إضافي للجمالية (اختياري) -->
+        <a href="M5F1.html" class="neon-btn" id="btn_1">الفصل الأول</a>
+        
+        
+    </div>
+
+    <!-- باقي المحتوى (النوافذ المنبثقة) لم يتغير -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-content">
+            <h3>إضافة فصل جديد</h3>
+            <div class="input-group">
+                <input type="text" id="inputChapterName" placeholder="أدخل اسم الفصل (مثال: الفصل الثالث)">
+            </div>
+            <div class="modal-buttons">
+                <button onclick="addNewChapter()" style="background: var(--secondary); color: #000;"><i class="fa-solid fa-check"></i> إضافة</button>
+                <button onclick="closeAddModal()" style="background: transparent; border: 1px solid var(--text-dark); color: var(--text-dark);"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="deleteConfirmModal">
+        <div class="modal-content">
+            <h3 style="color: #ff4757;"><i class="fa-solid fa-triangle-exclamation"></i> تأكيد الحذف</h3>
+            <p style="margin-bottom: 20px; font-size: 1.1rem;">هل أنت متأكد من حذف هذا الفصل؟</p>
+            <div class="modal-buttons">
+                <button onclick="confirmDeleteElement()" style="background: #ff4757; color: white;"><i class="fa-solid fa-trash"></i> حذف</button>
+                <button onclick="closeDeleteModal()" style="background: var(--secondary); color: #000;"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="edit-popup" id="editPopup" style="left: 285px; top: 110px;">
+        <button class="delete-btn" onclick="deleteElement()"><i class="fa-solid fa-trash"></i></button>
+        <button class="edit-btn-popup" onclick="prepareEdit()"><i class="fa-solid fa-pen"></i></button>
+        <button class="cancel-btn-popup" onclick="cancelPopup()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="confirm-popup" id="confirmPopup" style="left: 175.254px; top: 40px;">
+        <button class="confirm-edit-btn" onclick="confirmEdit()"><i class="fa-solid fa-check"></i></button>
+        <button class="cancel-edit-btn" onclick="cancelEdit()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="edit-toast" id="editToast">وضع التعديل نشط</div>
+
+    <script>
+        // --- لم يتم تعديل أي من وظائف الجافاسكريبت الأصلية ---
+        let editMode = false;
+        let currentEditElement = null;
+        let originalText = '';
+        let elementToDelete = null;
+
+        // مسار ملف JSON الذي سيحفظ حالة الفصول
+        const LOG_FILE_PATH = '/storage/emulated/0/Android/data/com.S2/files/edits_M5.json';
+
+        // --- الحل: ذاكرة تخزين مؤقتة للحفاظ على البيانات ---
+        let inMemoryLog = null;
+
+        // --- دوال استرجاع وحفظ الفصول في JSON ---
+        function getChaptersLog() {
+            if (inMemoryLog) return inMemoryLog;
+            try {
+                if (typeof AndroidBridge !== 'undefined' && AndroidBridge.readFile) {
+                    let content = AndroidBridge.readFile(LOG_FILE_PATH);
+                    if (content) {
+                        content = content.trim();
+                        if (content !== '') {
+                            inMemoryLog = JSON.parse(content);
+                            if (!inMemoryLog.chapters) inMemoryLog.chapters = {};
+                            return inMemoryLog;
+                        }
+                    }
+                }
+            } catch (e) { 
+                console.error('Error reading or parsing log file', e); 
+            }
+            inMemoryLog = { chapters: {} };
+            return inMemoryLog;
+        }
+
+        function saveLogState(data) {
+            inMemoryLog = data;
+            if (typeof AndroidBridge !== 'undefined' && AndroidBridge.saveFile) {
+                try {
+                    AndroidBridge.saveFile(LOG_FILE_PATH, JSON.stringify(data, null, 2));
+                } catch (e) {
+                    console.error('Error saving log file', e);
+                }
+            }
+        }
+
+        function updateChapterLog(id, name, href, status) {
+            let logData = getChaptersLog();
+            if (!logData || typeof logData !== 'object') logData = { chapters: {} };
+            if (!logData.chapters) logData.chapters = {};
+            
+            logData.chapters[id] = {
+                name: name,
+                href: href,
+                status: status,
+                timestamp: Date.now()
+            };
+            saveLogState(logData);
+        }
+
+        function restoreChaptersFromLog() {
+            let logData = getChaptersLog();
+            if (!logData || !logData.chapters) return;
+            
+            const container = document.getElementById('mainContainer');
+            
+            for (const [id, info] of Object.entries(logData.chapters)) {
+                let existingElement = document.getElementById(id);
+                
+                if (info.status === 'deleted') {
+                    if (existingElement) existingElement.remove();
+                } else if (info.status === 'active') {
+                    if (existingElement) {
+                        existingElement.textContent = info.name;
+                        existingElement.href = info.href;
+                    } else {
+                        const newBtn = document.createElement('a');
+                        newBtn.id = id;
+                        newBtn.className = 'neon-btn';
+                        newBtn.href = info.href;
+                        newBtn.textContent = info.name;
+                        newBtn.addEventListener('mousedown', handleTouchStart);
+                        newBtn.addEventListener('touchstart', handleTouchStart, {passive: true});
+                        container.appendChild(newBtn);
+                    }
+                }
+            }
+        }
+
+        function loadThemePreference() {
+    const savedTheme = localStorage.getItem('s2-theme');
+    if (savedTheme === 'light') {
+        document.body.classList.remove('dark-mode');
+    } else {
+        document.body.classList.add('dark-mode');
+    }
+}
+
+
+        
+
+        function loadEditModePreference() {
+            const savedEditMode = localStorage.getItem('M5_EditMode');
+            if (savedEditMode === 'enabled') enableEditMode();
+            else disableEditMode();
+        }
+
+        function toggleMenu() { 
+    // فتح وإغلاق القائمة الجانبية
+    document.getElementById("menu").classList.toggle("open"); 
+    // تدوير الزر وإرجاعه لطبيعته
+    document.querySelector(".menu-btn").classList.toggle("rotate-active");
+}
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            if (editMode) enableEditMode();
+            else disableEditMode();
+        }
+
+        function enableEditMode() {
+            editMode = true;
+            document.body.classList.add('edit-mode-active');
+            document.querySelector('.edit-btn').innerHTML = '<span>✓</span> إنهاء التعديل';
+            localStorage.setItem('M5_EditMode', 'enabled');
+            showToast('وضع التعديل نشط');
+        }
+
+        function disableEditMode() {
+            editMode = false;
+            document.body.classList.remove('edit-mode-active');
+            document.querySelector('.edit-btn').innerHTML = '<span>✎</span> تفعيل التعديل';
+            localStorage.setItem('M5_EditMode', 'disabled');
+            document.querySelectorAll('[contenteditable="true"]').forEach(el => el.removeAttribute('contenteditable'));
+            hideEditPopup();
+            hideConfirmPopup();
+        }
+
+        document.addEventListener('click', function(e) {
+            if (editMode) {
+                let link = e.target.closest('a');
+                if (link) e.preventDefault();
+            }
+        });
+
+        function handleTouchStart(e) {
+            if (!editMode || e.target.hasAttribute('contenteditable')) return;
+
+            const element = e.target.closest('.neon-btn');
+            if (!element) return;
+
+            currentEditElement = element;
+            originalText = currentEditElement.innerText;
+
+            const touch = e.touches ? e.touches[0] : e;
+const popup = document.getElementById('editPopup');
+const rect = currentEditElement.getBoundingClientRect();
+
+let popY = rect.top - 10; // محاولة وضع الأزرار فوق الفصل بقليل
+// إذا كان الفصل قريباً جداً من أعلى الشاشة، نعكس المكان ليصبح تحت الفصل
+if (popY < 60) {
+    popY = rect.bottom + 60; 
+}
+
+popup.style.left = touch.clientX + 'px';
+popup.style.top = popY + 'px';
+popup.classList.add('show');
+
+
+            hideConfirmPopup();
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('show');
+            document.getElementById('menu').classList.remove('open');
+            document.getElementById('inputChapterName').value = '';
+        }
+
+        function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
+
+        function createNewFileFromTemplate(fileName, chapterTitle) {
+            let templateContent = "";
+            const templatePath = '/storage/emulated/0/Android/data/com.S2/files/555.json';
+
+            try {
+                if (typeof AndroidBridge !== 'undefined' && AndroidBridge.readFile) {
+                    const jsonContent = AndroidBridge.readFile(templatePath);
+                    if (jsonContent) {
+                        const parsed = JSON.parse(jsonContent);
+                        templateContent = parsed.template || ""; 
+                    }
+                }
+            } catch(e) {}
+
+            if (!templateContent) {
+                templateContent = `<!DOCTYPE html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="UTF-8">\n<title>${chapterTitle}</title>\n<style>body{font-family: 'Tajawal', sans-serif; background: #000; color:#fff; text-align: center; padding: 50px;}</style>\n</head>\n<body>\n<h1>${chapterTitle}</h1>\n</body>\n</html>`;
+            } else {
+                templateContent = templateContent.replace(/{{TITLE}}/g, chapterTitle);
+            }
+
+            if (typeof AndroidBridge !== 'undefined' && AndroidBridge.saveFile) {
+                const fullPath = '/storage/emulated/0/Android/data/com.S2/files/' + fileName;
+                AndroidBridge.saveFile(fullPath, templateContent);
+            }
+        }
+
+        function addNewChapter() {
+            const chapterName = document.getElementById('inputChapterName').value.trim();
+            if (!chapterName) {
+                showToast('يرجى كتابة اسم الفصل أولاً');
+                return;
+            }
+
+            const existingLinks = Array.from(document.querySelectorAll('.neon-btn')).map(el => el.getAttribute('href') || '');
+            let maxId = 0;
+            
+            existingLinks.forEach(href => {
+                const match = href.match(/M5D(\d+)\.html/i) || href.match(/M5\.1D(\d+)\.html/i);
+                if (match && match[1]) {
+                    const num = parseInt(match[1]);
+                    if (num > maxId) maxId = num;
+                }
+            });
+
+            const nextId = maxId + 1;
+            const newFileName = `M5D${nextId}.html`;
+
+            createNewFileFromTemplate(newFileName, chapterName);
+
+            const container = document.getElementById('mainContainer');
+            const newBtn = document.createElement('a');
+            
+            const uniqueBtnId = 'btn_custom_' + Date.now();
+            newBtn.id = uniqueBtnId; 
+            
+            newBtn.href = newFileName;
+            newBtn.className = 'neon-btn';
+            newBtn.textContent = chapterName;
+            newBtn.addEventListener('mousedown', handleTouchStart);
+            newBtn.addEventListener('touchstart', handleTouchStart, {passive: true});
+
+            container.appendChild(newBtn);
+            
+            updateChapterLog(uniqueBtnId, chapterName, newFileName, 'active');
+            
+            closeAddModal();
+            saveChanges();
+            showToast(`  تم إنشاء ${chapterName}`);
+        }
+
+        function prepareEdit() {
+            if (currentEditElement) {
+                currentEditElement.setAttribute('contenteditable', 'true');
+                currentEditElement.focus();
+                hideEditPopup();
+                
+                const rect = currentEditElement.getBoundingClientRect();
+const confirmPopup = document.getElementById('confirmPopup');
+
+let popY = rect.top - 10;
+// نفس المنطق، حماية الأزرار من الخروج من الشاشة
+if (popY < 60) {
+    popY = rect.bottom + 60;
+}
+
+confirmPopup.style.left = (rect.left + rect.width / 2) + 'px';
+confirmPopup.style.top = popY + 'px';
+confirmPopup.classList.add('show');
+
+            }
+        }
+
+        function confirmEdit() {
+            if (currentEditElement) {
+                const newText = currentEditElement.innerText.trim();
+                if (newText !== '' && newText !== originalText) {
+                    
+                    updateChapterLog(currentEditElement.id, newText, currentEditElement.getAttribute('href'), 'active');
+                    
+                    saveChanges();
+                    showToast('  تم تحديث الاسم');
+                } else {
+                    currentEditElement.innerText = originalText;
+                }
+                currentEditElement.removeAttribute('contenteditable');
+                hideConfirmPopup();
+                currentEditElement = null;
+            }
+        }
+
+        function cancelEdit() {
+            if (currentEditElement) {
+                currentEditElement.innerText = originalText;
+                currentEditElement.removeAttribute('contenteditable');
+                hideConfirmPopup();
+                currentEditElement = null;
+            }
+        }
+
+        function deleteElement() {
+            if (currentEditElement) {
+                if (currentEditElement.id === 'btn_1') {
+                    showToast('⚠️ عذراً، لا يمكن حذف الفصل الأساسي الأول!');
+                    hideEditPopup();
+                    return;
+                }
+                
+                elementToDelete = currentEditElement;
+                hideEditPopup();
+                document.getElementById('deleteConfirmModal').classList.add('show');
+            }
+        }
+
+        function confirmDeleteElement() {
+            if (elementToDelete) {
+                
+                updateChapterLog(elementToDelete.id, elementToDelete.textContent, elementToDelete.getAttribute('href'), 'deleted');
+                
+                elementToDelete.remove();
+                closeDeleteModal();
+                saveChanges();
+                showToast(' تم الحذف');
+                elementToDelete = null;
+                currentEditElement = null;
+            }
+        }
+
+        function closeDeleteModal() { document.getElementById('deleteConfirmModal').classList.remove('show'); }
+        function cancelPopup() { hideEditPopup(); currentEditElement = null; }
+        function hideEditPopup() { document.getElementById('editPopup').classList.remove('show'); }
+        function hideConfirmPopup() { document.getElementById('confirmPopup').classList.remove('show'); }
+
+        function showToast(msg) {
+            const toast = document.getElementById('editToast');
+            toast.innerHTML = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function saveChanges() {
+            document.getElementById('editPopup').classList.remove('show');
+            document.getElementById('confirmPopup').classList.remove('show');
+            document.getElementById('addModal').classList.remove('show');
+            document.getElementById('deleteConfirmModal').classList.remove('show');
+            document.querySelectorAll('[contenteditable="true"]').forEach(el => el.removeAttribute('contenteditable'));
+
+            const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            if (typeof AndroidBridge !== 'undefined' && AndroidBridge.saveFile) {
+                AndroidBridge.saveFile('/storage/emulated/0/Android/data/com.S2/files/M5.html', htmlContent);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            restoreChaptersFromLog();
+            loadThemePreference();
+            loadEditModePreference();
+
+            document.querySelectorAll('.neon-btn').forEach(btn => {
+                btn.addEventListener('mousedown', handleTouchStart);
+                btn.addEventListener('touchstart', handleTouchStart, {passive: true});
+            });
+        });
+    </script>
+
+
+</body></html>
